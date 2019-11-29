@@ -103,7 +103,7 @@ namespace Microsoft.Data.SqlClient
 #else
                 {
 #endif //DEBUG
-                    if (connection.IsEnlistedInTransaction)
+                    if (!connection.IsEnlistedInTransaction)
                     { // defect first
                         Bid.Trace("<sc.SqlDelegatedTransaction.Initialize|RES|CPOOL> %d#, Connection %d#, was enlisted, now defecting.\n", ObjectID, connection.ObjectID);
                         connection.EnlistNull();
