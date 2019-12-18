@@ -24,6 +24,8 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
         // Use a union statement so that Identity columns don't carry over
         private const string _createTableQuery = "select * into {0} from Employees where EmployeeID < 3 union all (select * from Employees where 1 = 0)";
         private string _tempTable;
+        private string _tempIdTable;
+        private string _tempProcName;
         private string _tempKey;
         private string _randomGuid;
 
@@ -57,6 +59,10 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
             _randomGuid = Guid.NewGuid().ToString();
             _tempTable = Environment.MachineName + "_" + _randomGuid;
             _tempTable = _tempTable.Replace('-', '_');
+
+            _tempIdTable = "[ID_" + _tempTable + "]";
+            _tempProcName = "[sp_insert_" + _tempTable + "]";
+            _tempTable = "[" + _tempTable + "]";
 
             _tempKey = "employee_id_key_" + Environment.TickCount.ToString() + _randomGuid;
             _tempKey = _tempKey.Replace('-', '_');
@@ -759,24 +765,24 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
         public void UpdateRefreshTest()
         {
             string createIdentTable =
-                "CREATE TABLE ID_" + _tempTable + "(id int IDENTITY," +
+                "CREATE TABLE " + _tempIdTable + "(id int IDENTITY," +
                 "LastName nvarchar(50) NULL," +
                 "Firstname nvarchar(50) NULL)";
 
             string spCreateInsert =
-                "CREATE PROCEDURE sp_insert" + _tempTable +
+                "CREATE PROCEDURE " + _tempProcName +
                 "(@FirstName nvarchar(50), @LastName nvarchar(50), @id int OUTPUT) " +
                 "AS INSERT INTO " + _tempTable + " (FirstName, LastName) " +
                 "VALUES (@FirstName, @LastName); " +
                 "SELECT @id=@@IDENTITY";
 
-            string spDropInsert = "DROP PROCEDURE sp_insert" + _tempTable;
+            string spDropInsert = "DROP PROCEDURE " + _tempProcName;
             bool dropSP = false;
 
             using (SqlDataAdapter adapter = new SqlDataAdapter())
             using (SqlConnection conn = new SqlConnection(DataTestUtility.TCPConnectionString))
             using (SqlCommand cmd = new SqlCommand(null, conn))
-            using (SqlCommand temp = new SqlCommand("SELECT id, LastName, FirstName into " + _tempTable + " from ID_" + _tempTable, conn))
+            using (SqlCommand temp = new SqlCommand("SELECT id, LastName, FirstName into " + _tempTable + " from " + _tempIdTable, conn))
             using (SqlCommand tableClean = new SqlCommand("", conn))
             {
                 ExecuteNonQueryCommand(createIdentTable);
@@ -784,7 +790,7 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
                 {
                     adapter.InsertCommand = new SqlCommand()
                     {
-                        CommandText = "sp_insert" + _tempTable,
+                        CommandText = _tempProcName,
                         CommandType = CommandType.StoredProcedure
                     };
                     adapter.InsertCommand.Parameters.Add(new SqlParameter("@FirstName", SqlDbType.NVarChar, 50, "FirstName"));
@@ -843,7 +849,7 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
                     {
                         ExecuteNonQueryCommand(spDropInsert);
                         ExecuteNonQueryCommand("DROP TABLE " + _tempTable);
-                        ExecuteNonQueryCommand("DROP TABLE ID_" + _tempTable);
+                        ExecuteNonQueryCommand("DROP TABLE " + _tempIdTable);
                     }
                 }
             }
@@ -1065,14 +1071,14 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
         public void AutoGenErrorTest()
         {
             string createIdentTable =
-                "CREATE TABLE ID_" + _tempTable + "(id int IDENTITY," +
+                "CREATE TABLE " + _tempIdTable + "(id int IDENTITY," +
                 "LastName nvarchar(50) NULL," +
                 "Firstname nvarchar(50) NULL)";
 
             try
             {
                 using (SqlConnection conn = new SqlConnection(DataTestUtility.TCPConnectionString))
-                using (SqlCommand cmd = new SqlCommand("SELECT * into " + _tempTable + " from ID_" + _tempTable, conn))
+                using (SqlCommand cmd = new SqlCommand("SELECT * into " + _tempTable + " from " + _tempIdTable, conn))
                 using (SqlDataAdapter adapter = new SqlDataAdapter())
                 {
                     ExecuteNonQueryCommand(createIdentTable);
@@ -1100,7 +1106,7 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
             finally
             {
                 ExecuteNonQueryCommand("DROP TABLE " + _tempTable);
-                ExecuteNonQueryCommand("DROP TABLE ID_" + _tempTable);
+                ExecuteNonQueryCommand("DROP TABLE " + _tempIdTable);
             }
         }
 
@@ -1462,13 +1468,13 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
         {
             // make sure that we always get a cloned command back (which means that it should always have the badapple parameter!)
             e.Command = (SqlCommand)((ICloneable)e.Command).Clone();
-            DataTestUtility.AssertEqualsWithDescription("sp_insert", e.Command.CommandText.Substring(0, 9), "Unexpected command name.");
+            DataTestUtility.AssertEqualsWithDescription("[sp_inser", e.Command.CommandText.Substring(0, 9), "Unexpected command name.");
             e.Command.Parameters.RemoveAt("@badapple");
         }
 
         private void RowUpdated_UpdateRefreshTest(object sender, SqlRowUpdatedEventArgs e)
         {
-            DataTestUtility.AssertEqualsWithDescription("sp_insert", e.Command.CommandText.Substring(0, 9), "Unexpected command name.");
+            DataTestUtility.AssertEqualsWithDescription("[sp_inser", e.Command.CommandText.Substring(0, 9), "Unexpected command name.");
         }
 
         private void VerifyUpdateRow(SqlDataAdapter sa, DataSet ds, int cRows, string table)

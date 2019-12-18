@@ -7,7 +7,7 @@ using System;
 
 namespace Microsoft.Data.SqlClient.ManualTesting.Tests
 {
-    public class AADConnectionsTest
+    public class AADConnectionTest
     {
         private static void ConnectAndDisconnect(string connectionString, SqlCredential credential = null)
         {
@@ -47,7 +47,7 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
             return res;
         }
 
-        private static string RetrieveValueFromConnStr(string connStr, string keyword)
+        private static string RetrieveValueFromConnStr(string connStr, string[] keywords)
         {
             // tokenize connection string and retrieve value for a specific key.
             string res = "";
@@ -56,10 +56,13 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
             {
                 if (!string.IsNullOrEmpty(key.Trim()))
                 {
-                    if (key.Trim().ToLower().StartsWith(keyword.Trim().ToLower()))
+                    foreach (string keyword in keywords)
                     {
-                        res = key.Substring(key.IndexOf('=') + 1).Trim();
-                        break;
+                        if (key.Trim().ToLower().StartsWith(keyword.Trim().ToLower()))
+                        {
+                            res = key.Substring(key.IndexOf('=') + 1).Trim();
+                            break;
+                        }
                     }
                 }
             }
@@ -225,7 +228,7 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
                         transaction: null
                     );
                     string customerId = (string)sqlCommand.ExecuteScalar();
-                    string expected = RetrieveValueFromConnStr(DataTestUtility.AADPasswordConnectionString, "User ID");
+                    string expected = RetrieveValueFromConnStr(DataTestUtility.AADPasswordConnectionString, new[] { "User ID", "UID" });
                     Assert.Equal(expected, customerId);
                 }
             }
@@ -317,7 +320,7 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
             ConnectAndDisconnect(DataTestUtility.AADPasswordConnectionString);
 
             // connection fails with expected error message.
-            string[] credKeys = { "User ID", "Password" };
+            string[] credKeys = { "User ID", "UID", "PWD", "Password" };
             string connStrWithNoCred = RemoveKeysInConnStr(DataTestUtility.AADPasswordConnectionString, credKeys);
             InvalidOperationException e = Assert.Throws<InvalidOperationException>(() => ConnectAndDisconnect(connStrWithNoCred));
 

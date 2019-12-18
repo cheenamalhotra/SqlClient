@@ -156,9 +156,9 @@ Tests can be built and run with custom Target Frameworks. See the below examples
 ```
 
 ```bash
-> msbuild /t:BuildTestsNetCore /p:TargetNetCoreVersion=netcoreapp3.0
+> msbuild /t:BuildTestsNetCore /p:TargetNetCoreVersion=netcoreapp3.1
 # Build the tests for custom TargetFramework (.NET Core)
-# Applicable values: netcoreapp2.1 | netcoreapp2.2 | netcoreapp3.0
+# Applicable values: netcoreapp2.1 | netcoreapp2.2 | netcoreapp3.0 | netcoreapp3.1
 ```
 ### Running Tests:
 
@@ -167,7 +167,7 @@ Tests can be built and run with custom Target Frameworks. See the below examples
 # Use above property to run Functional Tests with custom TargetFramework (.NET Framework)
 # Applicable values: net46 (Default) | net461 | net462 | net47 | net471  net472 | net48
 
-> dotnet test /p:TargetNetCoreVersion=netcoreapp3.0 ...
+> dotnet test /p:TargetNetCoreVersion=netcoreapp3.1 ...
 # Use above property to run Functional Tests with custom TargetFramework (.NET Core)
-# Applicable values: netcoreapp2.1 | netcoreapp2.2 | netcoreapp3.0
+# Applicable values: netcoreapp2.1 | netcoreapp2.2 | netcoreapp3.0 | netcoreapp3.1
 ```
