@@ -712,6 +712,30 @@ namespace Microsoft.Data.SqlClient
             }
         }
 
+        /// 
+        /// for internal use only
+        /// 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public string AzureSQLDNSCachingSupportedState
+        {
+            get
+            {
+                SqlInternalConnection innerConnection = (InnerConnection as SqlInternalConnection);
+                string result;
+
+                if (null != innerConnection)
+                {
+                    result = innerConnection.IsAzureSQLDNSCachingSupported ? "true": "false";
+                }
+                else
+                {
+                    result = "innerConnection is null!";
+                }
+
+                return result;
+            }
+        } 
+
         /// <include file='..\..\..\..\..\..\..\doc\snippets\Microsoft.Data.SqlClient\SqlConnection.xml' path='docs/members[@name="SqlConnection"]/DataSource/*' />
         [
         Browsable(true),
@@ -3109,5 +3133,3 @@ namespace Microsoft.Data.SqlClient
         internal byte[] rgbData;
     }
 } // Microsoft.Data.SqlClient namespace
-
-

@@ -278,6 +278,28 @@ namespace Microsoft.Data.SqlClient
         /// </summary>
         internal string EnclaveType { get; set; }
 
+        // kz AzureSQLDNSCaching related
+        #region kz DNSCaching
+
+        private bool _serverSupportsDNSCaching = false;
+
+        /// <summary>
+        /// Get or set if AzureSQLDNSCaching is supported by the server.
+        /// </summary>
+        internal bool IsAzureSQLDNSCachingSupported
+        {
+            get
+            {
+                return _serverSupportsDNSCaching;
+            }
+            set
+            {
+                _serverSupportsDNSCaching = value;
+            }
+        }
+
+        #endregion
+
         /// <summary>
         /// Get if data classification is enabled by the server.
         /// </summary>
@@ -8548,6 +8570,21 @@ namespace Microsoft.Data.SqlClient
             return len;
         }
 
+        // kz
+        internal int WriteAzureSQLDNSCachingFeatureRequest(bool write /* if false just calculates the length */)
+        {
+            int len = 5; // 1byte = featureID, 4bytes = featureData length
+
+            if (write)
+            {
+                // Write Feature ID
+                _physicalStateObj.WriteByte(TdsEnums.FEATUREEXT_AZURESQLDNSCACHING);
+                WriteInt(0, _physicalStateObj); // we don't send any data
+            }
+
+            return len;
+        }
+
         internal void TdsLogin(SqlLogin rec,
                                TdsEnums.FeatureExtension requestedFeatures,
                                SessionData recoverySessionData,
@@ -8734,6 +8771,11 @@ namespace Microsoft.Data.SqlClient
                     if ((requestedFeatures & TdsEnums.FeatureExtension.UTF8Support) != 0)
                     {
                         length += WriteUTF8SupportFeatureRequest(false);
+                    }
+                    // kz
+                    if ((requestedFeatures & TdsEnums.FeatureExtension.AzureSQLDNSCaching) != 0)
+                    {
+                        length += WriteAzureSQLDNSCachingFeatureRequest(false);
                     }
                     length++; // for terminator
                 }
@@ -9008,6 +9050,11 @@ namespace Microsoft.Data.SqlClient
                     if ((requestedFeatures & TdsEnums.FeatureExtension.UTF8Support) != 0)
                     {
                         WriteUTF8SupportFeatureRequest(true);
+                    }
+                    // kz
+                    if ((requestedFeatures & TdsEnums.FeatureExtension.AzureSQLDNSCaching) != 0)
+                    {
+                        WriteAzureSQLDNSCachingFeatureRequest(true);
                     }
                     _physicalStateObj.WriteByte(0xFF); // terminator
                 }

@@ -1531,6 +1531,10 @@ namespace Microsoft.Data.SqlClient
                 requestedFeatures |= TdsEnums.FeatureExtension.AzureSQLSupport;
             }
 
+            // kz
+            // The AzureSQLDNSCaching feature is implicitly set
+            requestedFeatures |= TdsEnums.FeatureExtension.AzureSQLDNSCaching;
+
             _parser.TdsLogin(login, requestedFeatures, _recoverySessionData, _fedAuthFeatureExtensionData, _originalNetworkAddressInfo);
         }
 
@@ -3073,6 +3077,32 @@ namespace Microsoft.Data.SqlClient
                         break;
                     }
 
+                // kz
+                case TdsEnums.FEATUREEXT_AZURESQLDNSCACHING:
+                    {
+                        if (Bid.AdvancedOn)
+                        {
+                            Bid.Trace("<sc.SqlInternalConnectionTds.OnFeatureExtAck> %d#, Received feature extension acknowledgement for AZURESQLDNSCACHING\n", ObjectID);
+                        }
+
+                        if (data.Length < 1)
+                        {
+                            Bid.Trace("<sc.SqlInternalConnectionTds.OnFeatureExtAck|ERR> %d#, Unknown token for AZURESQLDNSCACHING\n", ObjectID);
+                            throw SQL.ParsingError(ParsingErrorState.CorruptedTdsStream);
+                        }
+
+                        if (1 == data[0]) {
+                            _parser.IsAzureSQLDNSCachingSupported = true;
+                            IsAzureSQLDNSCachingSupported = true;
+                        }
+
+                        // need to add more steps for phrase 2
+                        // get IPv4 + IPv6 + Port number 
+                        // not put them in the DNS cache at this point but need to store them somewhere
+
+                        break;
+                    }
+
                 default:
                     {
                         // Unknown feature ack
@@ -3207,4 +3237,3 @@ namespace Microsoft.Data.SqlClient
         }
     }
 }
-

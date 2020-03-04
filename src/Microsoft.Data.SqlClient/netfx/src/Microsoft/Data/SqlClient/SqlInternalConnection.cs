@@ -195,6 +195,28 @@ namespace Microsoft.Data.SqlClient
             }
         }
 
+        // kz AzureSQLDNSCaching related
+        #region kz DNSCaching
+
+        private bool _serverSupportsDNSCaching = false;
+
+        /// <summary>
+        /// Get or set if AzureSQLDNSCaching is supported by the server.
+        /// </summary>
+        internal bool IsAzureSQLDNSCachingSupported
+        {
+            get
+            {
+                return _serverSupportsDNSCaching;
+            }
+            set
+            {
+                _serverSupportsDNSCaching = value;
+            }
+        }
+
+        #endregion
+
         internal bool IsAzureSQLConnection
         {
             get
