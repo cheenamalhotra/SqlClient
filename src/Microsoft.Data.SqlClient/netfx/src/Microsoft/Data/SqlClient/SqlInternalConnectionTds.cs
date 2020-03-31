@@ -883,6 +883,9 @@ namespace Microsoft.Data.SqlClient
                         if (EnlistedTransactionDisposed)
                         {
                             DetachTransaction(enlistedTransaction, true);
+
+                            // Lets confirm!
+                            CurrentTransaction.Completed(TransactionState.Aborted);
                         }
                         else
                         {
@@ -964,6 +967,12 @@ namespace Microsoft.Data.SqlClient
             // transaction is completed and we can do it all then.
             if (!IsNonPoolableTransactionRoot)
             {
+                // We need to abort Current Transaction on this connection.
+                if (!DelegatedTransaction.IsActive && EnlistedTransaction == null)
+                {
+                    CurrentTransaction.Completed(TransactionState.Aborted);
+                }
+
                 Debug.Assert(null != _parser || IsConnectionDoomed, "Deactivating a disposed connection?");
                 if (_parser != null)
                 {

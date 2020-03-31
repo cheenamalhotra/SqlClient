@@ -1017,6 +1017,8 @@ namespace Microsoft.Data.ProviderBase
                                 //   connection appropriately regardless of the pool state.
                                 Debug.Assert(_transactedConnectionPool != null, "Transacted connection pool was not expected to be null.");
                                 _transactedConnectionPool.PutTransactedObject(transaction, obj);
+
+                                obj.SetInStasis();
                                 rootTxn = true;
                             }
                             else

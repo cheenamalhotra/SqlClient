@@ -505,7 +505,7 @@ namespace Microsoft.Data.SqlClient
                         _connection = null;
                     }
                     // Safest approach is to doom this connection, whose transaction has been aborted externally.
-                    connection.DoomThisConnection();
+                    // connection.DoomThisConnection();
                 }
             }
         }
