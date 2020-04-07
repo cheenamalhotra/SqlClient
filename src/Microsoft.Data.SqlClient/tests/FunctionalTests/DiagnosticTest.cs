@@ -18,7 +18,7 @@ using System.Runtime.CompilerServices;
 using System;
 using System.Data;
 
-namespace Microsoft.Data.SqlClient.Tests
+namespace Microsoft.Data.SqlClient.FunctionalTests
 {
     public class DiagnosticTest : RemoteExecutorTestBase
     {
