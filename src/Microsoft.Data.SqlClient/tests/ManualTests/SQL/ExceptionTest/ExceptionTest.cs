@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -21,6 +22,9 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
         private const string warningNoiseMessage = "The full-text search condition contained noise word(s).";
         private const string warningInfoMessage = "Test of info messages";
         private const string orderIdQuery = "select orderid from orders where orderid < 10250";
+        private const string taskCancelledMessage = "A task was canceled";
+        private const string operationCancelledMessage = "Operation cancelled by user";
+        private const string invalidTableMessage = "Invalid object name 'dbo.NonexistentTable";
 
         [CheckConnStrSetupFact]
         public static void WarningTest()
@@ -284,6 +288,79 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
             GC.WaitForPendingFinalizers();
 
             TaskScheduler.UnobservedTaskException -= handler;
+        }
+
+        [CheckConnStrSetupFact]
+        public static void TaskCanceledExceptionTest()
+        {
+            CancellationTokenSource source = new CancellationTokenSource();
+            source.CancelAfter(2000);
+            Task task = CancelAsyncOperation(source.Token);
+            DataTestUtility.AssertThrowsWrapper<AggregateException, TaskCanceledException>(
+                () => task.Wait(),
+                exceptionMessage: taskCancelledMessage);
+            Assert.True(task.IsCanceled, "Task was not cancelled. Status: " + task.Status);
+        }
+
+        private static async Task CancelAsyncOperation(CancellationToken cancellationToken)
+        {
+            using (SqlConnection connection = new SqlConnection(DataTestUtility.TCPConnectionString))
+            {
+                await connection.OpenAsync(cancellationToken);
+                SqlCommand command = new SqlCommand("WAITFOR DELAY '00:10:00';", connection);
+                await command.ExecuteNonQueryAsync(cancellationToken);
+            }
+        }
+
+        [CheckConnStrSetupFact]
+        private static void SqlExceptionTest()
+        {
+            VerifyConnectionFailure<SqlException>(
+                () => GenerateSqlException(),
+                invalidTableMessage,
+                VerifyException);
+        }
+
+        private static void GenerateSqlException()
+        {
+            using (SqlConnection connection = new SqlConnection(DataTestUtility.TCPConnectionString))
+            {
+                connection.Open();
+                using (SqlCommand command = new SqlCommand("select * from dbo.NonexistentTable;", connection))
+                {
+                    command.ExecuteReader();
+                }
+            }
+        }
+
+        [CheckConnStrSetupFact]
+        public static void CancelConnectionExceptionTest()
+        {
+            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(
+                DataTestUtility.TCPConnectionString)
+            { DataSource = badServer, ConnectTimeout = 1 };
+
+            SqlConnectionStringBuilder badBuilder = new SqlConnectionStringBuilder(
+              DataTestUtility.TCPConnectionString)
+            { DataSource = badServer };
+
+            CancellationTokenSource source = new CancellationTokenSource();
+            source.CancelAfter(1000); // give up after 1 sec
+
+            using (SqlConnection sqlConnection = new SqlConnection(builder.ConnectionString))
+            {
+                SqlException ex = Assert.ThrowsAsync<SqlException>(
+                    async () => await sqlConnection.OpenAsync()).Result;
+                Assert.True(ex.Message.Contains(sqlsvrBadConn),
+                    "Connected successfully when connection should have failed.");
+            }
+
+            using (SqlConnection sqlConnection = new SqlConnection(badBuilder.ConnectionString))
+            {
+                TaskCanceledException ex = Assert.ThrowsAsync<TaskCanceledException>(
+                    async () => await sqlConnection.OpenAsync(source.Token)).Result;
+                Assert.True(ex.Message.Contains(taskCancelledMessage), "Task was not cancelled.");
+            }
         }
 
         private static void GenerateConnectionException(string connectionString)
