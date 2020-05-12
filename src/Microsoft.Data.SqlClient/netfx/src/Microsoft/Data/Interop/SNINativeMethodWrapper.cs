@@ -52,20 +52,6 @@ namespace Microsoft.Data.SqlClient
         internal const int LocalDBFailedToLoadDll = 56;
         internal const int LocalDBBadRuntime = 57;
 
-        static SNINativeMethodWrapper()
-        {
-            var localPath = new Uri(typeof(SNINativeMethodWrapper).Assembly.CodeBase).LocalPath;
-            var localFolder = Path.GetDirectoryName(localPath);
-            var subfolder = Environment.Is64BitProcess ? "\\x64\\" : "\\x86\\";
-
-            IntPtr pDll = LoadLibrary(localFolder + subfolder + SNI);
-            if (pDll == IntPtr.Zero)
-            {
-                throw new System.ComponentModel.Win32Exception("Failed to load " + localFolder + subfolder + SNI,
-                    new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error()));
-            }
-        }
-
         internal static int SniMaxComposedSpnLength
         {
             get
