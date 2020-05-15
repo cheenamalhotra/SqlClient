@@ -5,7 +5,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Globalization;
+using System.Reflection.Emit;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -296,10 +298,18 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
             CancellationTokenSource source = new CancellationTokenSource();
             source.CancelAfter(2000);
             Task task = CancelAsyncOperation(source.Token);
-            DataTestUtility.AssertThrowsWrapper<AggregateException, TaskCanceledException>(
-                () => task.Wait(),
-                exceptionMessage: taskCancelledMessage);
-            Assert.True(task.IsCanceled, "Task was not cancelled. Status: " + task.Status);
+            try
+            {
+                task.Wait();
+            }
+            catch (AggregateException exception)
+            {
+                OperationCanceledException ex = exception.InnerException as OperationCanceledException;
+                Assert.True(ex != null, "Exception is not of type OperationCanceledException");
+                Assert.True(task.IsCanceled, "Task was not cancelled. Status: " + task.Status);
+                Assert.Contains(taskCancelledMessage, ex.Message);
+                Assert.Equal(ex.CancellationToken, source.Token);
+            }
         }
 
         private static async Task CancelAsyncOperation(CancellationToken cancellationToken)
@@ -345,7 +355,7 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
             { DataSource = badServer };
 
             CancellationTokenSource source = new CancellationTokenSource();
-            source.CancelAfter(1000); // give up after 1 sec
+            source.CancelAfter(2000); 
 
             using (SqlConnection sqlConnection = new SqlConnection(builder.ConnectionString))
             {

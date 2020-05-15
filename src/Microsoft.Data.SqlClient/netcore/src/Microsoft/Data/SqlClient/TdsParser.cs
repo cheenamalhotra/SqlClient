@@ -2460,6 +2460,8 @@ namespace Microsoft.Data.SqlClient
                     {
                         // Add attention error to collection - if not RunBehavior.Clean!
                         stateObj.AddError(new SqlError(0, 0, TdsEnums.MIN_ERROR_CLASS, _server, SQLMessage.OperationCancelled(), "", 0));
+                        // throw new OperationCanceledException instead of making new SqlException
+                        //throw new OperationCanceledException();
                     }
                 }
             }

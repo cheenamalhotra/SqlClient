@@ -2271,10 +2271,10 @@ namespace Microsoft.Data.SqlClient
                 Task<int>.Factory.FromAsync(BeginExecuteNonQueryAsync, EndExecuteNonQueryAsync, null).ContinueWith((t) =>
                 {
                     registration.Dispose();
+                    Exception e = cancellationToken.IsCancellationRequested ?
+                        new OperationCanceledException(cancellationToken) : t.Exception.InnerException;
                     if (t.IsFaulted)
                     {
-                        Exception e = cancellationToken.IsCancellationRequested ? 
-                            new TaskCanceledException() : t.Exception.InnerException;
                         _diagnosticListener.WriteCommandError(operationId, this, e);
                         source.SetException(e);
                     }
@@ -2282,6 +2282,7 @@ namespace Microsoft.Data.SqlClient
                     {
                         if (t.IsCanceled)
                         {
+                            source.SetException(e);
                             source.SetCanceled();
                         }
                         else

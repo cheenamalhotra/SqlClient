@@ -2906,8 +2906,7 @@ namespace Microsoft.Data.SqlClient
                     registration.Dispose();
                     if (t.IsFaulted)
                     {
-                        Exception e = cancellationToken.IsCancellationRequested ? 
-                            new TaskCanceledException() : t.Exception.InnerException;
+                        Exception e = t.Exception.InnerException;
                         source.SetException(e);
                     }
                     else
