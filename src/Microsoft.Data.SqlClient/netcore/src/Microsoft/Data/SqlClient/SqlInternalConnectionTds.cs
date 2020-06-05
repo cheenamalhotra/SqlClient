@@ -367,8 +367,7 @@ namespace Microsoft.Data.SqlClient
                 SessionData reconnectSessionData = null,
                 bool applyTransientFaultHandling = false,
                 string accessToken = null,
-                DbConnectionPool pool = null,
-                SqlAuthenticationProviderManager sqlAuthProviderManager = null
+                DbConnectionPool pool = null
                 ) : base(connectionOptions)
 
         {
@@ -403,7 +402,7 @@ namespace Microsoft.Data.SqlClient
             }
 
             _activeDirectoryAuthTimeoutRetryHelper = new ActiveDirectoryAuthenticationTimeoutRetryHelper();
-            _sqlAuthenticationProviderManager = sqlAuthProviderManager ?? SqlAuthenticationProviderManager.Instance;
+            _sqlAuthenticationProviderManager = SqlAuthenticationProviderManager.Instance;
 
             _identity = identity;
             Debug.Assert(newSecurePassword != null || newPassword != null, "cannot have both new secure change password and string based change password to be null");
@@ -1650,9 +1649,9 @@ namespace Microsoft.Data.SqlClient
                         // If it is read-only routing - we did not supply AppIntent=RO (it should be checked before)
                         // If it is something else, not known yet (future server) - this client is not designed to support this.                    
                         // In any case, server should not have sent the routing info.
+                        SqlClientEventSource.Log.TraceEvent("<sc.SqlInternalConnectionTds.LoginWithFailover> Routed to {0}", RoutingInfo.ServerName);
                         throw SQL.ROR_UnexpectedRoutingInfo(this);
                     }
-                    SqlClientEventSource.Log.TraceEvent("<sc.SqlInternalConnectionTds.LoginWithFailover> Routed to {0}", RoutingInfo.ServerName);
                     break; // leave the while loop -- we've successfully connected
                 }
                 catch (SqlException sqlex)
@@ -1753,8 +1752,7 @@ namespace Microsoft.Data.SqlClient
                             ConnectionOptions.TrustServerCertificate,
                             ConnectionOptions.IntegratedSecurity,
                             withFailover,
-                            ConnectionOptions.Authentication,
-                            _sqlAuthenticationProviderManager);
+                            ConnectionOptions.Authentication);
 
             _timeoutErrorInternal.EndPhase(SqlConnectionTimeoutErrorPhase.ConsumePreLoginHandshake);
             _timeoutErrorInternal.SetAndBeginPhase(SqlConnectionTimeoutErrorPhase.LoginBegin);

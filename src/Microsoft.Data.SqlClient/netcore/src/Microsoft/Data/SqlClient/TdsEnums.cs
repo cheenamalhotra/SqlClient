@@ -603,8 +603,8 @@ namespace Microsoft.Data.SqlClient
         // Login data validation Rules
         //
         internal const ushort MAXLEN_HOSTNAME = 128; // the client machine name
-        internal const ushort MAXLEN_USERNAME = 128; // the client user id
-        internal const ushort MAXLEN_PASSWORD = 128; // the password supplied by the client
+        internal const ushort MAXLEN_CLIENTID = 128;
+        internal const ushort MAXLEN_CLIENTSECRET = 128;
         internal const ushort MAXLEN_APPNAME = 128; // the client application name
         internal const ushort MAXLEN_SERVERNAME = 128; // the server name
         internal const ushort MAXLEN_CLIENTINTERFACE = 128; // the interface library name
@@ -1076,6 +1076,16 @@ namespace Microsoft.Data.SqlClient
 
         /// <include file='../../../../../../../doc/snippets/Microsoft.Data.SqlClient/SqlConnectionColumnEncryptionSetting.xml' path='docs/members[@name="SqlConnectionColumnEncryptionSetting"]/Enabled/*' />
         Enabled,
+    }
+
+    /// <include file='../../../../../../../doc/snippets/Microsoft.Data.SqlClient/SqlConnectionOverrides.xml' path='docs/members[@name="SqlConnectionOverrides"]/SqlConnectionOverrides/*' />
+    [Flags]
+    public enum SqlConnectionOverrides
+    {
+        /// <include file='../../../../../../../doc/snippets/Microsoft.Data.SqlClient/SqlConnectionOverrides.xml' path='docs/members[@name="SqlConnectionOverrides"]/None/*' />
+        None = 0,
+        /// <include file='../../../../../../../doc/snippets/Microsoft.Data.SqlClient/SqlConnectionOverrides.xml' path='docs/members[@name="SqlConnectionOverrides"]/OpenWithoutRetry/*' />
+        OpenWithoutRetry = 1,
     }
 
     /// <include file='../../../../../../../doc/snippets/Microsoft.Data.SqlClient/SqlCommandColumnEncryptionSetting.xml' path='docs/members[@name="SqlCommandColumnEncryptionSetting"]/SqlCommandColumnEncryptionSetting/*' />

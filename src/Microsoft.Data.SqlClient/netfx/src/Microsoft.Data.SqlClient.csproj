@@ -82,16 +82,19 @@
     <Reference Include="System.Transactions" />
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="Microsoft.Data.SqlClientKey.snk" />
-  </ItemGroup>
   <!-- Contains common items shared between NetFx and NetCore -->
   <ItemGroup>
     <Compile Include="..\..\src\Microsoft\Data\SqlClient\SqlClientEventSource.cs">
       <Link>Microsoft\Data\SqlClient\SqlClientEventSource.cs</Link>
     </Compile>
-    <Compile Include="..\..\src\Microsoft\Data\SqlClient\SqlClientLogger.cs" >
+    <Compile Include="..\..\src\Microsoft\Data\SqlClient\SqlClientLogger.cs">
       <Link>Microsoft\Data\SqlClient\SqlClientLogger.cs</Link>
+    </Compile>
+    <Compile Include="..\..\src\Microsoft\Data\Common\ActivityCorrelator.cs">
+      <Link>Microsoft\Data\Common\ActivityCorrelator.cs</Link>
+    </Compile>
+    <Compile Include="..\..\src\Microsoft\Data\Sql\SqlNotificationRequest.cs">
+      <Link>Microsoft\Data\Sql\SqlNotificationRequest.cs</Link>
     </Compile>
     <Compile Include="..\..\src\Microsoft\Data\SqlClient\DataClassification\SensitivityClassification.cs">
       <Link>Microsoft\Data\SqlClient\DataClassification\SensitivityClassification.cs</Link>
@@ -108,13 +111,16 @@
     <Compile Include="..\..\src\Microsoft\Data\ProviderBase\DbConnectionPoolAuthenticationContextKey.cs">
       <Link>Microsoft\Data\ProviderBase\DbConnectionPoolAuthenticationContextKey.cs</Link>
     </Compile>
+    <Compile Include="..\..\src\Microsoft\Data\SqlClient\ActiveDirectoryAuthenticationTimeoutRetryHelper.cs">
+      <Link>Microsoft\Data\SqlClient\ActiveDirectoryAuthenticationTimeoutRetryHelper.cs</Link>
+    </Compile>
     <Compile Include="..\..\src\Microsoft\Data\SqlClient\Server\IBinarySerialize.cs">
       <Link>Microsoft\Data\SqlClient\Server\IBinarySerialize.cs</Link>
     </Compile>
     <Compile Include="..\..\src\Microsoft\Data\SqlClient\ColumnEncryptionKeyInfo.cs">
       <Link>Microsoft\Data\SqlClient\ColumnEncryptionKeyInfo.cs</Link>
     </Compile>
-    <Compile Include="..\..\src\Microsoft\Data\SqlClient\OnChangedEventHandler.cs" >
+    <Compile Include="..\..\src\Microsoft\Data\SqlClient\OnChangedEventHandler.cs">
       <Link>Microsoft\Data\SqlClient\OnChangedEventHandler.cs</Link>
     </Compile>
     <Compile Include="..\..\src\Microsoft\Data\SqlClient\SqlAeadAes256CbcHmac256Algorithm.cs">
@@ -183,8 +189,13 @@
     <Compile Include="..\..\src\Microsoft\Data\SqlClient\SqlSymmetricKeyCache.cs">
       <Link>Microsoft\Data\SqlClient\SqlSymmetricKeyCache.cs</Link>
     </Compile>
+    <Compile Include="..\..\src\Microsoft\Data\SqlTypes\SqlTypeWorkarounds.cs">
+      <Link>Microsoft\Data\SqlTypes\SqlTypeWorkarounds.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Microsoft\Data\Interop\SNINativeManagedWrapperX64.cs" />
+    <Compile Include="Microsoft\Data\Interop\SNINativeManagedWrapperX86.cs" />
     <Compile Include="Microsoft\Data\Interop\SNINativeMethodWrapper.cs" />
     <Compile Include="Microsoft\Data\SqlClient\ActiveDirectoryNativeAuthenticationProvider.cs" />
     <Compile Include="Microsoft\Data\SqlClient\AlwaysEncryptedAttestationException.cs" />
@@ -193,7 +204,6 @@
     <Compile Include="Microsoft\Data\SqlClient\ApplicationIntent.cs" />
     <Compile Include="Microsoft\Data\SqlClient\assemblycache.cs" />
     <Compile Include="Microsoft\Data\SqlClient\AzureAttestationBasedEnclaveProvider.cs" />
-    <Compile Include="Microsoft\Data\SqlClient\ActiveDirectoryAuthenticationTimeoutRetryHelper.cs" />
     <Compile Include="Microsoft\Data\SqlClient\EnclaveDelegate.cs" />
     <Compile Include="Microsoft\Data\SqlClient\EnclaveProviderBase.cs" />
     <Compile Include="Microsoft\Data\SqlClient\EnclaveSessionCache.cs" />
@@ -296,7 +306,6 @@
     <Compile Include="Microsoft\Data\SqlClient\TdsRecordBufferSetter.cs" />
     <Compile Include="Microsoft\Data\SqlClient\TdsValueSetter.cs" />
     <Compile Include="Microsoft\Data\SqlClient\SqlClientWrapperSmiStreamChars.cs" />
-    <Compile Include="Microsoft\Data\SqlTypes\SqlTypeWorkarounds.cs" />
     <Compile Include="Microsoft\Data\SqlTypes\SqlStreamChars.cs" />
     <Compile Include="Microsoft\Data\DataException.cs" />
     <Compile Include="Microsoft\Data\Common\NativeMethods.cs" />
@@ -311,7 +320,6 @@
     <Compile Include="Common\src\Microsoft\Data\Common\MultipartIdentifier.cs" />
     <Compile Include="Common\src\Microsoft\Data\Common\NameValuePermission.cs" />
     <Compile Include="Microsoft\Data\Common\AdapterSwitches.cs" />
-    <Compile Include="Microsoft\Data\Common\ActivityCorrelator.cs" />
     <Compile Include="Microsoft\Data\Common\AdapterUtil.cs" />
     <Compile Include="Microsoft\Data\Common\DbConnectionOptions.cs" />
     <Compile Include="Microsoft\Data\Common\DbConnectionStringCommon.cs" />
@@ -368,7 +376,6 @@
     <Compile Include="Microsoft\Data\SqlClient\Server\sqlser.cs" />
     <Compile Include="Microsoft\Data\Sql\SqlGenericUtil.cs" />
     <Compile Include="Microsoft\Data\SqlClient\Server\sqlnorm.cs" />
-    <Compile Include="Microsoft\Data\Sql\SqlNotificationRequest.cs" />
     <Compile Include="Microsoft\Data\ProviderBase\FieldNameLookup.cs" />
     <Compile Include="Microsoft\Data\OperationAbortedException.cs" />
   </ItemGroup>
@@ -414,6 +421,8 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Data.SqlClient.SNI">
       <Version>$(MicrosoftDataSqlClientSniVersion)</Version>
+      <PrivateAssets>All</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Identity.Client">
       <Version>$(MicrosoftIdentityClientVersion)</Version>

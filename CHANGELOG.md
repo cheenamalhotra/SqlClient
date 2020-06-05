@@ -4,6 +4,57 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## [Preview Release 2.0.0-preview4.20142.4 ] - 2020-05-21
+
+### Added
+- Microsoft.Data.SqlClient (.NET Core and .NET Standard) on Windows is now dependent on **Microsoft.Data.SqlClient.SNI.runtime**, replacing the previous dependency on **runtime.native.System.Data.SqlClient.SNI** [#570](https://github.com/dotnet/SqlClient/pull/570)
+- The new **Microsoft.Data.SqlClient.SNI.runtime** dependency adds support for the *ARM* platform along with the already supported platforms *ARM64*, *x64* and *x86* on Windows [#570](https://github.com/dotnet/SqlClient/pull/570)
+- Improved driver performance by introducing managed packet recycling [#389](https://github.com/dotnet/SqlClient/pull/389)
+
+### Fixed
+- Fixed `SqlBulkCopy` to work with database columns containing metadata about data classification [#568](https://github.com/dotnet/SqlClient/pull/568)
+- Fixed unsafe cast in `SqlException` for `SerializationEntry.Value` 
+- Fixed null reference exceptions in `SqlDelegatedTransaction` methods [#563](https://github.com/dotnet/SqlClient/pull/563)
+
+### Changes
+- Standardized connection string properties for enhanced user experience [#534](https://github.com/dotnet/SqlClient/pull/534)
+- Improved performance by reducing eventsource tracing related to allocations from TVP write methods [#557](https://github.com/dotnet/SqlClient/pull/557) [#564](https://github.com/dotnet/SqlClient/pull/564)
+
+### Breaking Changes
+- For .NET Framework applications consuming **Microsoft.Data.SqlClient**, the `SNI.dll` files previously downloaded to the `bin\x64` and `bin\x86` folders are now named `Microsoft.Data.SqlClient.SNI.x64.dll` and `Microsoft.Data.SqlClient.SNI.x86.dll` and will be downloaded to the `bin` directory, to support auto-loading in the application process [#570](https://github.com/dotnet/SqlClient/pull/570). This change is not going to impact client applications unless a direct reference has been made to `SNI.dll` or the x86 and x64 folders.
+
+
+## [Stable Release 1.1.3] - 2020-05-15
+
+### Fixed
+- Fixed driver behavior to not perform enlistment of pooled connection on aborted transaction [#551](https://github.com/dotnet/SqlClient/pull/551)
+- Fixed issues introduced with MARS TDS Header fix in last release by reverting original change that caused issues. [#550](https://github.com/dotnet/SqlClient/pull/550)
+
+
+## [Preview Release 2.0.0-preview3.20122.2] - 2020-05-01
+
+### Added
+- Allow passing username with Active Directory Interactive Authentication in .NET Framework [#492](https://github.com/dotnet/SqlClient/pull/492)
+- Allow large UDT buffers for .NET Framework [#456](https://github.com/dotnet/SqlClient/pull/456) 
+- Added "Transaction Id" and "Client Version" in Diagnostic Source traces [#515](https://github.com/dotnet/SqlClient/pull/515)
+- Added new `SqlConnectionOverrides` APIs to perform `SqlConnection.Open()` with fail fast option [#463](https://github.com/dotnet/SqlClient/pull/463)
+
+### Fixed
+- Addressed MARS TDS Header errors by reverting changes to make `SqlDataReader.ReadAsync()` non-blocking [#547](https://github.com/dotnet/SqlClient/pull/547)
+- Fixed driver behavior to not perform enlistment of pooled connection in aborted transaction [#543](https://github.com/dotnet/SqlClient/pull/543)
+- Fixed wrong application domain selected when starting `SqlDependencyListener` [#410](https://github.com/dotnet/SqlClient/pull/410)
+- Added missing refs for `RowCopied` property in `SqlBulkCopy` [#508](https://github.com/dotnet/SqlClient/pull/508)
+
+### Changes
+- Improved performance by removing unwanted method calls in Event Source tracing [#506](https://github.com/dotnet/SqlClient/pull/506)
+- Removed Diagnostic Source and Configuration Manager dependencies from .NET Standard implementation [#535](https://github.com/dotnet/SqlClient/pull/535)
+- Removed redundant calls to `DbConnectionPoolKey.GetType()` [#512](https://github.com/dotnet/SqlClient/pull/512)
+
+### Breaking Changes
+- Updated driver to perform decimal scale rounding to match SQL Server behavior [#470](https://github.com/dotnet/SqlClient/pull/470)
+- Standardized App Context switch name that enables Managed SNI on Windows for .NET Core and .NET Standard (break only applies to 2.0 preview releases that introduced the switch) [#548](https://github.com/dotnet/SqlClient/pull/548)
+
+
 ## [Stable Release 1.1.2] - 2020-04-15
 
 ### Added

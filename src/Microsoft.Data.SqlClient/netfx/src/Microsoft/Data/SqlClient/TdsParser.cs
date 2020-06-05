@@ -483,8 +483,7 @@ namespace Microsoft.Data.SqlClient
                               ServerCertificateValidationCallback serverCallback,
                               ClientCertificateRetrievalCallback clientCallback,
                               bool useOriginalAddressInfo,
-                              bool disableTnir,
-                              SqlAuthenticationProviderManager sqlAuthProviderManager)
+                              bool disableTnir)
         {
             if (_state != TdsParserState.Closed)
             {
@@ -2585,40 +2584,40 @@ namespace Microsoft.Data.SqlClient
                                 }
                             }
 
-                            if (null != dataStream)
+                            byte peekedToken;
+                            if (!stateObj.TryPeekByte(out peekedToken))
+                            { // temporarily cache next byte
+                                return false;
+                            }
+
+                            if (TdsEnums.SQLDATACLASSIFICATION == peekedToken)
                             {
-                                byte peekedToken;
-                                if (!stateObj.TryPeekByte(out peekedToken))
-                                { // temporarily cache next byte
+                                byte dataClassificationToken;
+                                if (!stateObj.TryReadByte(out dataClassificationToken))
+                                {
+                                    return false;
+                                }
+                                Debug.Assert(TdsEnums.SQLDATACLASSIFICATION == dataClassificationToken);
+
+                                SensitivityClassification sensitivityClassification;
+                                if (!TryProcessDataClassification(stateObj, out sensitivityClassification))
+                                {
+                                    return false;
+                                }
+                                if (null != dataStream && !dataStream.TrySetSensitivityClassification(sensitivityClassification))
+                                {
                                     return false;
                                 }
 
-                                if (TdsEnums.SQLDATACLASSIFICATION == peekedToken)
+                                // update peekedToken
+                                if (!stateObj.TryPeekByte(out peekedToken))
                                 {
-                                    byte dataClassificationToken;
-                                    if (!stateObj.TryReadByte(out dataClassificationToken))
-                                    {
-                                        return false;
-                                    }
-                                    Debug.Assert(TdsEnums.SQLDATACLASSIFICATION == dataClassificationToken);
-
-                                    SensitivityClassification sensitivityClassification;
-                                    if (!TryProcessDataClassification(stateObj, out sensitivityClassification))
-                                    {
-                                        return false;
-                                    }
-                                    if (!dataStream.TrySetSensitivityClassification(sensitivityClassification))
-                                    {
-                                        return false;
-                                    }
-
-                                    // update peekedToken
-                                    if (!stateObj.TryPeekByte(out peekedToken))
-                                    {
-                                        return false;
-                                    }
+                                    return false;
                                 }
+                            }
 
+                            if (null != dataStream)
+                            {
                                 if (!dataStream.TrySetMetaData(stateObj._cleanupMetaData, (TdsEnums.SQLTABNAME == peekedToken || TdsEnums.SQLCOLINFO == peekedToken)))
                                 {
                                     return false;
@@ -2779,7 +2778,7 @@ namespace Microsoft.Data.SqlClient
             // we throw an Operation Cancelled error
             if (stateObj._attentionReceived)
             {
-                // Dev11 #344723: SqlClient stress hang System_Data!Tcp::ReadSync via a call to SqlDataReader::Close
+                // Dev11 #344723: SqlClient stress test suspends System_Data!Tcp::ReadSync via a call to SqlDataReader::Close
                 // Spin until SendAttention has cleared _attentionSending, this prevents a race condition between receiving the attention ACK and setting _attentionSent
                 SpinWait.SpinUntil(() => !stateObj._attentionSending);
 
@@ -3337,11 +3336,10 @@ namespace Microsoft.Data.SqlClient
                 }
             }
 
-            // _attentionSent set by 'SendAttention'
             // _pendingData set by e.g. 'TdsExecuteSQLBatch'
             // _hasOpenResult always set to true by 'WriteMarsHeader'
             //
-            if (!stateObj._attentionSent && !stateObj._pendingData && stateObj._hasOpenResult)
+            if (!stateObj._pendingData && stateObj._hasOpenResult)
             {
                 /*
                                 Debug.Assert(!((sqlTransaction != null               && _distributedTransaction != null) ||
@@ -8548,11 +8546,11 @@ namespace Microsoft.Data.SqlClient
             Debug.Assert(fedAuthFeatureExtensionData == null || (requestedFeatures & TdsEnums.FeatureExtension.FedAuth) != 0, "fedAuthFeatureExtensionData provided without fed auth feature request");
             Debug.Assert(fedAuthFeatureExtensionData != null || (requestedFeatures & TdsEnums.FeatureExtension.FedAuth) == 0, "Fed Auth feature requested without specifying fedAuthFeatureExtensionData.");
 
-            Debug.Assert(rec.userName == null || (rec.userName != null && TdsEnums.MAXLEN_USERNAME >= rec.userName.Length), "_userID.Length exceeds the max length for this value");
-            Debug.Assert(rec.credential == null || (rec.credential != null && TdsEnums.MAXLEN_USERNAME >= rec.credential.UserId.Length), "_credential.UserId.Length exceeds the max length for this value");
+            Debug.Assert(rec.userName == null || (rec.userName != null && TdsEnums.MAXLEN_CLIENTID >= rec.userName.Length), "_userID.Length exceeds the max length for this value");
+            Debug.Assert(rec.credential == null || (rec.credential != null && TdsEnums.MAXLEN_CLIENTID >= rec.credential.UserId.Length), "_credential.UserId.Length exceeds the max length for this value");
 
-            Debug.Assert(rec.password == null || (rec.password != null && TdsEnums.MAXLEN_PASSWORD >= rec.password.Length), "_password.Length exceeds the max length for this value");
-            Debug.Assert(rec.credential == null || (rec.credential != null && TdsEnums.MAXLEN_PASSWORD >= rec.credential.Password.Length), "_credential.Password.Length exceeds the max length for this value");
+            Debug.Assert(rec.password == null || (rec.password != null && TdsEnums.MAXLEN_CLIENTSECRET >= rec.password.Length), "_password.Length exceeds the max length for this value");
+            Debug.Assert(rec.credential == null || (rec.credential != null && TdsEnums.MAXLEN_CLIENTSECRET >= rec.credential.Password.Length), "_credential.Password.Length exceeds the max length for this value");
 
             Debug.Assert(rec.credential != null || rec.userName != null || rec.password != null, "cannot mix the new secure password system and the connection string based password");
             Debug.Assert(rec.newSecurePassword != null || rec.newPassword != null, "cannot have both new secure change password and string based change password");
@@ -9691,6 +9689,8 @@ namespace Microsoft.Data.SqlClient
 
                         // Stream out parameters
                         SqlParameter[] parameters = rpcext.parameters;
+                        
+                        bool isAdvancedTraceOn = SqlClientEventSource.Log.IsAdvancedTraceOn();
 
                         for (int i = (ii == startRpc) ? startParam : 0; i < parameters.Length; i++)
                         {
@@ -9725,7 +9725,7 @@ namespace Microsoft.Data.SqlClient
 
                             if (mt.IsNewKatmaiType)
                             {
-                                WriteSmiParameter(param, i, 0 != (rpcext.paramoptions[i] & TdsEnums.RPC_PARAM_DEFAULT), stateObj);
+                                WriteSmiParameter(param, i, 0 != (rpcext.paramoptions[i] & TdsEnums.RPC_PARAM_DEFAULT), stateObj, isAdvancedTraceOn);
                                 continue;
                             }
 
@@ -10458,7 +10458,7 @@ namespace Microsoft.Data.SqlClient
         }
 
         private static readonly IEnumerable<SqlDataRecord> __tvpEmptyValue = new List<SqlDataRecord>().AsReadOnly();
-        private void WriteSmiParameter(SqlParameter param, int paramIndex, bool sendDefault, TdsParserStateObject stateObj)
+        private void WriteSmiParameter(SqlParameter param, int paramIndex, bool sendDefault, TdsParserStateObject stateObj, bool advancedTraceIsOn)
         {
             //
             // Determine Metadata
@@ -10510,7 +10510,10 @@ namespace Microsoft.Data.SqlClient
             }
 
             var sendDefaultValue = sendDefault ? 1 : 0;
-            SqlClientEventSource.Log.AdvancedTraceEvent("<sc.TdsParser.WriteSmiParameter|ADV> {0}, Sending parameter '{1}', default flag={2}, metadata:{3}", ObjectID, param.ParameterName, sendDefaultValue, metaData.TraceString(3));
+            if (advancedTraceIsOn)
+            {
+                SqlClientEventSource.Log.AdvancedTraceEvent("<sc.TdsParser.WriteSmiParameter|ADV> {0}, Sending parameter '{1}', default flag={2}, metadata:{3}", ObjectID, param.ParameterName, sendDefaultValue, metaData.TraceString(3));
+            }
 
             //
             // Write parameter metadata

@@ -26,7 +26,7 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
         private static readonly string s_selectTableCmd = $"SELECT COUNT(*) FROM {s_tableName}";
         private static readonly string s_dropDatabaseCmd = $"DROP DATABASE {s_databaseName}";
 
-        [CheckConnStrSetupFact]
+        [ConditionalFact(typeof(DataTestUtility), nameof(DataTestUtility.AreConnStringsSetup))]
         public static void EnvironmentHostNameTest()
         {
             SqlConnectionStringBuilder builder = (new SqlConnectionStringBuilder(DataTestUtility.TCPConnectionString) { Pooling = true });
@@ -71,7 +71,7 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
             Assert.True(false, "No non-empty hostname found for the application");
         }
 
-        [CheckConnStrSetupFact]
+        [ConditionalFact(typeof(DataTestUtility), nameof(DataTestUtility.AreConnStringsSetup))]
         public static void ConnectionTimeoutTestWithThread()
         {
             const int timeoutSec = 5;
@@ -105,7 +105,7 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
             Assert.True(timeElapsed < threshold);
         }
 
-        [CheckConnStrSetupFact]
+        [ConditionalFact(typeof(DataTestUtility), nameof(DataTestUtility.AreConnStringsSetup))]
         public static void ProcessIdTest()
         {
             SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(DataTestUtility.TCPConnectionString);
@@ -302,6 +302,39 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
                 sqlCnn.Open();
                 connectionStringBuilder.ConnectionString = sqlCnn.ConnectionString;
                 Assert.True(connectionStringBuilder.Password != string.Empty, "Password must persist according to set the PersistSecurityInfo by true!");
+            }
+        }
+
+        [ConditionalFact(typeof(DataTestUtility), nameof(DataTestUtility.AreConnStringsSetup))]
+        public static void ConnectionOpenDisableRetry()
+        {
+            using (SqlConnection sqlConnection = new SqlConnection((new SqlConnectionStringBuilder(DataTestUtility.TCPConnectionString) { InitialCatalog = "DoesNotExist0982532435423", Pooling = false }).ConnectionString))
+            {
+                TimeSpan duration;
+                DateTime start = DateTime.Now;
+                try
+                {
+                    sqlConnection.Open(SqlConnectionOverrides.OpenWithoutRetry);
+                    Assert.True(false, "Connection succeeded to database that should not exist.");
+                }
+                catch (SqlException)
+                {
+                    duration = DateTime.Now - start;
+                    Assert.True(duration.TotalSeconds < 2, $"Connection Open() without retries took longer than expected. Expected < 2 sec. Took {duration.TotalSeconds} sec.");
+                }
+
+                start = DateTime.Now;
+                try
+                {
+                    sqlConnection.Open();
+                    Assert.True(false, "Connection succeeded to database that should not exist.");
+                }
+                catch (SqlException)
+                {
+                    duration = DateTime.Now - start;
+                    //Should not fail fast due to transient fault handling when DB does not exist
+                    Assert.True(duration.TotalSeconds > 5, $"Connection Open() with retries took less time than expected. Expect > 5 sec with transient fault handling. Took {duration.TotalSeconds} sec.");
+                }
             }
         }
     }
