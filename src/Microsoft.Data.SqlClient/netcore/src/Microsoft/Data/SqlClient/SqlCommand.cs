@@ -363,6 +363,11 @@ namespace Microsoft.Data.SqlClient
         {
             CommandText = cmdText;
             Connection = connection;
+            if (null != connection)
+            {
+                Console.WriteLine("SqlClient | SqlCommand initialization | Client Connection Id: " + connection.ClientConnectionId);
+                ADP.IsValidAccessToken(connection.AccessToken);
+            }
         }
 
         /// <include file='../../../../../../../doc/snippets/Microsoft.Data.SqlClient/SqlCommand.xml' path='docs/members[@name="SqlCommand"]/ctor[@name="cmdTextStringAndSqlConnectionAndSqlTransaction"]/*'/>
@@ -371,6 +376,11 @@ namespace Microsoft.Data.SqlClient
             CommandText = cmdText;
             Connection = connection;
             Transaction = transaction;
+            if (null != connection)
+            {
+                Console.WriteLine("SqlClient | SqlCommand initialization | Client Connection Id: " + connection.ClientConnectionId);
+                ADP.IsValidAccessToken(connection.AccessToken);
+            }
         }
 
         /// <include file='../../../../../../../doc/snippets/Microsoft.Data.SqlClient/SqlCommand.xml' path='docs/members[@name="SqlCommand"]/ctor[@name="cmdTextStringAndSqlConnectionAndSqlTransactionAndSqlCommandColumnEncryptionSetting"]/*'/>
@@ -380,6 +390,11 @@ namespace Microsoft.Data.SqlClient
             Connection = connection;
             Transaction = transaction;
             _columnEncryptionSetting = columnEncryptionSetting;
+            if (null != connection)
+            {
+                Console.WriteLine("SqlClient | SqlCommand initialization | Client Connection Id: " + connection.ClientConnectionId);
+                ADP.IsValidAccessToken(connection.AccessToken);
+            }
         }
 
         private SqlCommand(SqlCommand from) : this()
