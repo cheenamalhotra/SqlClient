@@ -71,6 +71,9 @@ namespace Microsoft.Data.SqlClient
 
         public override int GetHashCode()
         {
+            // Logs access token expiry time for debugging
+            if (null != _accessToken)
+                ADP.IsValidAccessToken(_accessToken);
             return _hashValue;
         }
 
@@ -89,6 +92,9 @@ namespace Microsoft.Data.SqlClient
             {
                 unchecked
                 {
+                    // Logs access token expiry time for debugging
+                    ADP.IsValidAccessToken(_accessToken);
+                    
                     _hashValue = _hashValue * 17 + _accessToken.GetHashCode();
                 }
             }

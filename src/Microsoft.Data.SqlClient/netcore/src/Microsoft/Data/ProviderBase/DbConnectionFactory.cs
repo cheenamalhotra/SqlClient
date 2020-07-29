@@ -114,10 +114,13 @@ namespace Microsoft.Data.ProviderBase
                     if (((SqlClient.SqlConnection)owningConnection).ForceNewConnection)
                     {
                         Debug.Assert(!(oldConnection is DbConnectionClosed), "Force new connection, but there is no old connection");
+                        Console.WriteLine("SqlClient | Force ReplaceConnection from Pool " + connectionPool.PoolGroup.PoolKey.GetHashCode() + " | Pool Count: " + connectionPool.Count);
                         connection = connectionPool.ReplaceConnection(owningConnection, userOptions, oldConnection);
                     }
                     else
                     {
+                        Console.WriteLine("SqlClient | TryGetConnection from Pool " + connectionPool.PoolGroup.PoolKey.GetHashCode() + " | Pool Count: " + connectionPool.Count);
+
                         if (!connectionPool.TryGetConnection(owningConnection, retry, userOptions, out connection))
                         {
                             return false;

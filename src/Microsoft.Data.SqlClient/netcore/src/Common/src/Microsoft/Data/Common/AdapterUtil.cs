@@ -8,6 +8,8 @@ using System.Data;
 using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Globalization;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security;
 using System.Text;
@@ -15,6 +17,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
 using Microsoft.Data.SqlClient;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Data.Common
 {
@@ -29,7 +33,7 @@ namespace Microsoft.Data.Common
         internal static Task<bool> FalseTask => _falseTask ?? (_falseTask = Task.FromResult(false));
 
         internal const CompareOptions DefaultCompareOptions = CompareOptions.IgnoreKanaType | CompareOptions.IgnoreWidth | CompareOptions.IgnoreCase;
-        
+
         internal const int DefaultConnectionTimeout = DbConnectionStringDefaults.ConnectTimeout;
         internal const int InfiniteConnectionTimeout = 0; // infinite connection timeout identifier in seconds
         internal const int MaxBufferAccessTokenExpiry = 600; // max duration for buffer in seconds
@@ -526,6 +530,44 @@ namespace Microsoft.Data.Common
         internal static void SetCurrentTransaction(Transaction transaction)
         {
             Transaction.Current = transaction;
+        }
+
+        internal static bool IsValidAccessToken(string accessToken)
+        {
+            if (null == accessToken)
+            {
+                Console.WriteLine("SqlClient | Access Token is null");
+            }
+
+            var jwtHandler = new JwtSecurityTokenHandler();
+            var jwtOutput = string.Empty;
+
+            // Check Token Format
+            if (!jwtHandler.CanReadToken(accessToken))
+                return false;
+
+            JwtSecurityToken token = jwtHandler.ReadJwtToken(accessToken);
+
+            // Re-serialize the Token Headers to just Key and Values
+            var jwtHeader = JsonConvert.SerializeObject(token.Header.Select(h => new { h.Key, h.Value }));
+            jwtOutput = $"{{\r\n\"Header\":\r\n{JToken.Parse(jwtHeader)},";
+
+            // Re-serialize the Token Claims to just Type and Values
+            var jwtPayload = JsonConvert.SerializeObject(token.Claims.Select(c => new { c.Type, c.Value }));
+            jwtOutput += $"\r\n\"Payload\":\r\n{JToken.Parse(jwtPayload)}\r\n}}";
+
+            // Output the whole thing to pretty Json object formatted.
+            string jToken = JToken.Parse(jwtOutput).ToString(Formatting.Indented);
+            JToken payload = JObject.Parse(jToken).GetValue("Payload");
+            DateTime expiryDate = new DateTime(1970, 1, 1).AddSeconds((long)payload[4]["Value"]);
+            
+            Console.Out.WriteLine($"SqlClient | Access Token Expires On (UTC):  " + expiryDate);
+
+            if (expiryDate.CompareTo(DateTime.UtcNow) <= 0)
+            {
+                return false;
+            }
+            return true;
         }
     }
 }

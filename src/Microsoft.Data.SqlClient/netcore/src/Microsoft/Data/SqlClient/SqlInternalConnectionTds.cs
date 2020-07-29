@@ -529,6 +529,7 @@ namespace Microsoft.Data.SqlClient
             {
                 ThreadHasParserLockForClose = false;
                 _parserLock.Release();
+                Console.WriteLine("SqlClient | New TDS internal connection created > Client Connection Id: " + _clientConnectionId);
             }
             SqlClientEventSource.Log.AdvancedTraceEvent("<sc.SqlInternalConnectionTds.ctor|ADV> {0}, constructed new TDS internal connection", ObjectID);
         }
@@ -882,6 +883,8 @@ namespace Microsoft.Data.SqlClient
             {
                 Enlist(null);
             }
+
+            Console.WriteLine("SqlClient | Activate Pooled Connection > Client Connection Id: " + _clientConnectionId);
         }
 
         protected override void InternalDeactivate()
