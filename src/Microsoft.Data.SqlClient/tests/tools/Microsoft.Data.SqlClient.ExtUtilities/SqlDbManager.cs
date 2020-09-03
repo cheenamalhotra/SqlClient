@@ -45,6 +45,7 @@ namespace Microsoft.Data.SqlClient.ExtUtilities
                 var dbName = args[1];
                 s_configJson = Config.Load(ConfigPath);
                 LoadActiveConnectionStrings();
+                bool vbsServerDBFound = false;
 
                 foreach (KeyValuePair<string, string> activeConnString in s_activeConnectionStrings)
                 {
@@ -59,13 +60,17 @@ namespace Microsoft.Data.SqlClient.ExtUtilities
 
                             if (args[0] == "CreateDatabase")
                             {
-                                // We do not create database for HGS-VBS since SQL Server for AASVBS and HGSVBS connection strings is same.
-                                // Do not create database for NP connection string, since server is always same as TCP
-                                if (activeConnString.Key != TCPConnectionStringHGSVBS && activeConnString.Key != NPConnectionString)
+                                // We do not create database for both HGSVBS and AASVBS connection strings since SQL Server is same.
+                                // We do not create database for NP connection string, since server is always same as TCP connection string.
+                                if (!vbsServerDBFound && activeConnString.Key != NPConnectionString)
                                 {
                                     //Create a new database
                                     CreateDatabase(dbName, context);
                                     Console.WriteLine($"Database [{dbName}] created successfully in {builder.DataSource}");
+                                    if (activeConnString.Key == TCPConnectionStringHGSVBS || activeConnString.Key == TCPConnectionStringAASVBS)
+                                    {
+                                        vbsServerDBFound = true;
+                                    }
                                 }
                                 // Update Config.json accordingly
                                 builder.InitialCatalog = dbName;
@@ -73,13 +78,17 @@ namespace Microsoft.Data.SqlClient.ExtUtilities
                             }
                             else if (args[0] == "DropDatabase")
                             {
-                                // We do not drop database for HGS-VBS since SQL Server for AASVBS and HGSVBS connection strings is same.
-                                // Do not drop database for NP connection string, since server is always same as TCP
-                                if (activeConnString.Key != TCPConnectionStringHGSVBS && activeConnString.Key != NPConnectionString)
+                                // We do not drop database for both HGSVBS and AASVBS connection strings since SQL Server is same.
+                                // We do not drop database for NP connection string, since server is always same as TCP
+                                if (!vbsServerDBFound && activeConnString.Key != NPConnectionString)
                                 {
                                     // Drop Northwind for test run.
                                     DropIfExistsDatabase(dbName, context);
                                     Console.WriteLine($"Database [{dbName}] dropped successfully in {builder.DataSource}");
+                                    if (activeConnString.Key == TCPConnectionStringHGSVBS || activeConnString.Key == TCPConnectionStringAASVBS)
+                                    {
+                                        vbsServerDBFound = true;
+                                    }
                                 }
                             }
                             else
