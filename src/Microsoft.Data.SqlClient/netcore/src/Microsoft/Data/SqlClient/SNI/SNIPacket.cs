@@ -250,16 +250,16 @@ namespace Microsoft.Data.SqlClient.SNI
         /// </summary>
         /// <param name="stream">Stream to read from</param>
         /// <param name="callback">Completion callback</param>
-        public void ReadFromStreamAsync(Stream stream, SNIAsyncCallback callback)
+        public async void ReadFromStreamAsync(Stream stream, SNIAsyncCallback callback)
         {
-            stream.ReadAsync(_data, 0, _dataCapacity, CancellationToken.None)
+            await stream.ReadAsync(_data, 0, _dataCapacity, CancellationToken.None)
                 .ContinueWith(
                     continuationAction: _readCallback,
                     state: callback,
                     CancellationToken.None,
                     TaskContinuationOptions.DenyChildAttach,
                     TaskScheduler.Default
-                );
+                ).ConfigureAwait(false);
         }
 
         private void ReadFromStreamAsyncContinuation(Task<int> t, object state)
