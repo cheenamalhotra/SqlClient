@@ -36,6 +36,7 @@
     <!-- Set Target Framework when TestTargetOS is empty and Configuration is neither Debug nor Release. (Visual Studio) -->
     <Otherwise>
       <PropertyGroup>
+        <TargetFrameworks></TargetFrameworks>
         <TargetFramework>$(Configuration.Split('-')[0])</TargetFramework>
       </PropertyGroup>
     </Otherwise>
