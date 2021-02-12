@@ -22,6 +22,7 @@ using Microsoft.DotNet.RemoteExecutor;
 namespace Microsoft.Data.SqlClient.ManualTesting.Tests
 {
     [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework)]
+    [Trait("Speed", "Slow")]
     public class DiagnosticTest
     {
         private const string BadConnectionString = "data source = bad; initial catalog = bad; integrated security = true; connection timeout = 1;";

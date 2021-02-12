@@ -156,6 +156,7 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
         }
 
         [ConditionalFact(nameof(IsAccessTokenSetup), nameof(IsAADConnStringsSetup))]
+        [Trait("Speed", "Slow")]
         public static void AADPasswordWithWrongPassword()
         {
             string[] credKeys = { "Password", "PWD" };
@@ -181,6 +182,7 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
         }
 
         [ConditionalFact(nameof(IsAADConnStringsSetup))]
+        [Trait("Speed", "Slow")]
         public static void testADPasswordAuthentication()
         {
             // Connect to Azure DB with password and retrieve user name.
@@ -243,6 +245,7 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
         }
 
         [ConditionalFact(nameof(IsAADConnStringsSetup))]
+        [Trait("Speed", "Slow")]
         public static void EmptyPasswordInConnStrAADPassword()
         {
             // connection fails with expected error message.

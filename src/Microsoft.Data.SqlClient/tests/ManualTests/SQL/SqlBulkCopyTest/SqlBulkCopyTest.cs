@@ -177,6 +177,7 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
         }
 
         [ConditionalFact(typeof(DataTestUtility), nameof(DataTestUtility.AreConnStringsSetup), nameof(DataTestUtility.IsNotAzureServer))]
+        [Trait("Speed", "Slow")]
         public void Bug903514Test()
         {
             Bug903514.Test(_connStr, AddGuid("SqlBulkCopyTest_Bug903514"));

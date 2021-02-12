@@ -153,6 +153,7 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
 
         // Synapse: 110003;Invalid user or password
         [ConditionalFact(typeof(DataTestUtility), nameof(DataTestUtility.AreConnStringsSetup), nameof(DataTestUtility.IsNotAzureServer))]
+        [Trait("Speed", "Slow")]
         public static void ExceptionTests()
         {
             // Added to avoid random failures of Pool exhaustion

@@ -43,6 +43,7 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
 
         // Synapse: The statement failed. Column 'blob' has a data type that cannot participate in a columnstore index.
         [ConditionalFact(typeof(DataTestUtility), nameof(DataTestUtility.AreConnStringsSetup), nameof(DataTestUtility.IsNotAzureSynapse))]
+        [Trait("Speed", "Slow")]
         public void TestMain()
         {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US"); // To keep things consistent since we output dates as strings

@@ -24,6 +24,7 @@ namespace Microsoft.Data.SqlClient.ManualTesting.Tests
 
         // Disabled on Azure since this test fails on concurrent runs on same database.
         [ConditionalFact(typeof(DataTestUtility), nameof(DataTestUtility.AreConnStringsSetup), nameof(DataTestUtility.IsNotAzureServer))]
+        [Trait("Speed", "Slow")]
         public void CancelAsyncConnections()
         {
             string connectionString = DataTestUtility.TCPConnectionString;

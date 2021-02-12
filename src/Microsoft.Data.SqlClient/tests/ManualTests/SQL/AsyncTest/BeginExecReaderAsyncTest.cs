@@ -7,6 +7,7 @@ using Xunit;
 
 namespace Microsoft.Data.SqlClient.ManualTesting.Tests
 {
+    [Trait("Speed", "Slow")]
     public static class BeginExecReaderAsyncTest
     {
         private static string GenerateCommandText()
