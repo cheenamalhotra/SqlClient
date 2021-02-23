@@ -354,6 +354,7 @@ namespace Microsoft.Data.ProviderBase
         private const int CREATION_HANDLE = (int)0x2;
         private const int BOGUS_HANDLE = (int)0x3;
 
+        private const int WAIT_OBJECT_0 = 0;
 
         private const int ERROR_WAIT_DEFAULT = 5 * 1000; // 5 seconds
 
@@ -1460,7 +1461,7 @@ namespace Microsoft.Data.ProviderBase
                                 {
                                     waitResult = WaitHandle.WaitAny(_waitHandles.GetHandles(withCreate: true), CreationTimeout);
                                 }
-                                if (CREATION_HANDLE == waitResult)
+                                if (WAIT_OBJECT_0 == waitResult)
                                 {
                                     DbConnectionInternal newObj;
 
@@ -1520,7 +1521,7 @@ namespace Microsoft.Data.ProviderBase
                             }
                             finally
                             {
-                                if (CREATION_HANDLE == waitResult)
+                                if (WAIT_OBJECT_0 == waitResult)
                                 {
                                     // reuse waitResult and ignore its value
                                     _waitHandles.CreationSemaphore.Release(1);
