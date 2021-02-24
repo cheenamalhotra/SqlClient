@@ -525,11 +525,23 @@ namespace Microsoft.Data.SqlClient
 #else
                 {
 #endif //DEBUG
-                    _timeout = TimeoutTimer.StartSecondsTimeout(connectionOptions.ConnectTimeout);
+                    int timeoutSecs = connectionOptions.ConnectTimeout;
+
+                    /* We use default timeout (15s) for Active Directory Interactive authentication to allow driver to timeout 
+                     * before Server Timeout occurs at 20s on "Proxy" enabled Azure SQL Server. This case only impacts usecses where token 
+                     * takes time to be acquired, hence only Interactive authentication is handled here. This client timeout will be retried 
+                     * upon if "Transient Fault Handling" is enabled and access token that will be acquired will be used in next attempt.
+                     * This handles error "Specified network name is no longer available" from being thrown in event of Server timeout. */
+                    if (applyTransientFaultHandling && connectionOptions.Authentication == SqlAuthenticationMethod.ActiveDirectoryInteractive)
+                    {
+                        timeoutSecs = DbConnectionStringDefaults.ConnectTimeout;
+                    }
+                    _timeout = TimeoutTimer.StartSecondsTimeout(timeoutSecs);
 
                     // If transient fault handling is enabled then we can retry the login upto the ConnectRetryCount.
                     int connectionEstablishCount = applyTransientFaultHandling ? connectionOptions.ConnectRetryCount + 1 : 1;
-                    int transientRetryIntervalInMilliSeconds = connectionOptions.ConnectRetryInterval * 1000; // Max value of transientRetryInterval is 60*1000 ms. The max value allowed for ConnectRetryInterval is 60
+                    // Max value of transientRetryInterval is 60*1000 ms. The max value allowed for ConnectRetryInterval is 60
+                    int transientRetryIntervalInMilliSeconds = connectionOptions.ConnectRetryInterval * 1000;
                     for (int i = 0; i < connectionEstablishCount; i++)
                     {
                         try
