@@ -90,6 +90,7 @@ namespace Microsoft.Data.SqlClient
 
         private CancellationTokenSource _cancelAsyncOnCloseTokenSource;
         private CancellationToken _cancelAsyncOnCloseToken;
+        private CancellationToken _cancelAsyncOnReadToken;
 
         // Used for checking if the Type parameter provided to GetValue<T> is an INullable
         internal static readonly Type _typeofINullable = typeof(INullable);
@@ -120,6 +121,7 @@ namespace Microsoft.Data.SqlClient
             _currentTextReader = null;
             _cancelAsyncOnCloseTokenSource = new CancellationTokenSource();
             _cancelAsyncOnCloseToken = _cancelAsyncOnCloseTokenSource.Token;
+            _cancelAsyncOnReadToken = new CancellationToken();
             _columnDataCharsIndex = -1;
         }
 
@@ -4692,6 +4694,7 @@ namespace Microsoft.Data.SqlClient
                 if (cancellationToken.CanBeCanceled)
                 {
                     registration = cancellationToken.Register(SqlCommand.s_cancelIgnoreFailure, _command);
+                    _cancelAsyncOnReadToken = cancellationToken;
                 }
 
                 ReadAsyncCallContext context = null;
@@ -5298,6 +5301,11 @@ namespace Microsoft.Data.SqlClient
                 // Cancellation requested due to datareader being closed
                 return Task.FromException<T>(ADP.ExceptionWithStackTrace(ADP.ClosedConnectionError()));
             }
+            else if (_cancelAsyncOnReadToken.IsCancellationRequested)
+            {
+                // Temporarily throwing task canceled exception to ensure we stop further processing.
+                return Task.FromException<T>(new TaskCanceledException());
+            }
             else
             {
                 return completionSource.Task.ContinueWith(
@@ -5317,7 +5325,7 @@ namespace Microsoft.Data.SqlClient
                 // Somehow the network task faulted - return the exception
                 return Task.FromException<T>(task.Exception.InnerException);
             }
-            else if (!_cancelAsyncOnCloseToken.IsCancellationRequested)
+            else if (!_cancelAsyncOnCloseToken.IsCancellationRequested && !_cancelAsyncOnReadToken.IsCancellationRequested)
             {
                 TdsParserStateObject stateObj = _stateObj;
                 if (stateObj != null)
