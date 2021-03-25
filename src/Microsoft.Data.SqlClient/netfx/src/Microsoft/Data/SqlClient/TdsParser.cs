@@ -863,8 +863,19 @@ namespace Microsoft.Data.SqlClient
 
             if (MARSOn)
             {
-                // This will take care of disposing if the parser is closed
-                _sessionPool.PutSession(session);
+                if (session._pendingData)
+                {
+                    session.SniContext = SniContext.Snix_Close;
+#if DEBUG
+                    session.InvalidateDebugOnlyCopyOfSniContext();
+#endif
+                    session.Dispose();
+                }
+                else
+                {
+                    // This will take care of disposing if the parser is closed
+                    _sessionPool.PutSession(session);
+                }
             }
             else if ((_state == TdsParserState.Closed) || (_state == TdsParserState.Broken))
             {
@@ -878,8 +889,19 @@ namespace Microsoft.Data.SqlClient
             }
             else
             {
-                // Non-MARS, and session is ok - remove its owner
-                _physicalStateObj.Owner = null;
+                if (_physicalStateObj._pendingData)
+                {
+                    _physicalStateObj.SniContext = SniContext.Snix_Close;
+#if DEBUG
+                    _physicalStateObj.InvalidateDebugOnlyCopyOfSniContext();
+#endif
+                    _physicalStateObj.Dispose();
+                }
+                else
+                {
+                    // Non-MARS, and session is ok - remove its owner
+                    _physicalStateObj.Owner = null;
+                }
             }
         }
 

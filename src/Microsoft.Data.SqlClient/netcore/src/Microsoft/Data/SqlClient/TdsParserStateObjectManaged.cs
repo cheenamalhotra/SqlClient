@@ -182,7 +182,7 @@ namespace Microsoft.Data.SqlClient.SNI
             if (packet != null)
             {
                 SNIHandle handle = Handle;
-                handle.ReturnPacket(packet);
+                handle?.ReturnPacket(packet);
             }
         }
 
