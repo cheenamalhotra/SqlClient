@@ -172,7 +172,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Data.SqlClient.Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Data.SqlClient.ExtUtilities", "Microsoft.Data.SqlClient\tests\tools\Microsoft.Data.SqlClient.ExtUtilities\Microsoft.Data.SqlClient.ExtUtilities.csproj", "{E4C08DCE-DC29-4FEB-B655-1E7287DB5A2B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Data.SqlClient.Benchmark.CLI", "..\Microsoft.Data.SqlClient.Benchmark.CLI\Microsoft.Data.SqlClient.Benchmark.CLI.csproj", "{084A2ACD-D8CD-4A1A-BB3E-2604B7A07D8F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Data.SqlClient.Benchmark.CLI", "..\Microsoft.Data.SqlClient.Benchmark.CLI\Microsoft.Data.SqlClient.Benchmark.CLI.csproj", "{084A2ACD-D8CD-4A1A-BB3E-2604B7A07D8F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -1209,7 +1209,7 @@ Global
 		{E7336BFB-8521-423A-A140-3123F9065C5D} = {0CC4817A-12F3-4357-912C-09315FAAD008}
 		{89D6D382-9B36-43C9-A912-03802FDA8E36} = {0CC4817A-12F3-4357-912C-09315FAAD008}
 		{E4C08DCE-DC29-4FEB-B655-1E7287DB5A2B} = {0CC4817A-12F3-4357-912C-09315FAAD008}
-		{084A2ACD-D8CD-4A1A-BB3E-2604B7A07D8F} = {28E5EFE6-C9DD-4FF9-9FEC-532F72DFFA6E}
+		{084A2ACD-D8CD-4A1A-BB3E-2604B7A07D8F} = {0CC4817A-12F3-4357-912C-09315FAAD008}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {01D48116-37A2-4D33-B9EC-94793C702431}

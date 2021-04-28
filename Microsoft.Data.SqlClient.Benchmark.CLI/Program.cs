@@ -1,5 +1,5 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
+using System.Threading.Tasks;
 
 namespace Microsoft.Data.SqlClient.Benchmark.CLI
 {
@@ -9,8 +9,13 @@ namespace Microsoft.Data.SqlClient.Benchmark.CLI
         {
             if (args.Any(a => a == "--profile"))
             {
-                var b = new SqlBulkCopyBenchmark.InternalBenchmark();
+                var b = new SqlBulkCopyBenchmark.IDataReaderBenchmark();
                 b.BulkCopy();
+                Task.Run(async () => await b.BulkCopyAsync());
+
+                using var c = new SqlBulkCopyBenchmark.SqlDataReaderBenchmark();
+                c.BulkCopy();
+                Task.Run(async () => await c.BulkCopyAsync());
             }
             else
             {

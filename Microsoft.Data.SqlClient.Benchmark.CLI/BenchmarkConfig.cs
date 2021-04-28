@@ -5,10 +5,7 @@
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Diagnosers;
 using BenchmarkDotNet.Jobs;
-using BenchmarkDotNet.Loggers;
-using BenchmarkDotNet.Validators;
 using BenchmarkDotNet.Exporters;
-using BenchmarkDotNet.Columns;
 
 namespace Microsoft.Data.SqlClient.Benchmark.CLI
 {
@@ -17,6 +14,7 @@ namespace Microsoft.Data.SqlClient.Benchmark.CLI
         public static readonly ManualConfig Instance = DefaultConfig.Instance
             .AddJob(Job.Default.WithLaunchCount(1).WithIterationCount(5).WithWarmupCount(0))
             .AddDiagnoser(MemoryDiagnoser.Default)
+            .AddDiagnoser(ThreadingDiagnoser.Default)
             .AddExporter(MarkdownExporter.GitHub)
             .WithOption(ConfigOptions.DisableOptimizationsValidator, true)
         ;

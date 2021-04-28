@@ -10,7 +10,12 @@ namespace Microsoft.Data.SqlClient.Benchmark.CLI
 {
     public class ItemToCopy
     {
+        // IDataReader Bulk Copy
         public const string TableName = "TestTable";
+
+        // SqlDataReader Bulk Copy
+        public const string Source_TableName = "TestTableSrc";
+        public const string Target_TableName = "TestTableTarget";
 
         // keeping this data static so the performance of the benchmark is not varied by the data size & shape
         public int IntColumn { get; } = 123456;
@@ -24,8 +29,11 @@ namespace Microsoft.Data.SqlClient.Benchmark.CLI
         public bool? NullableBoolColumn { get; }
         public int? NullableIntColumn { get; }
 
+        public static readonly string TableSql = SqlGen(TableName);
+        public static readonly string SrcTableSql = SqlGen(Source_TableName);
+        public static readonly string TargetTableSql = SqlGen(Target_TableName);
 
-        public static readonly string TableSql = $@"
+        static string SqlGen(string TableName) => $@"
                 CREATE TABLE {TableName} (
                       IntColumn INT NOT NULL
                     , BoolColumn BIT NOT NULL
@@ -37,6 +45,16 @@ namespace Microsoft.Data.SqlClient.Benchmark.CLI
                     , DateTimeColumn DATETIME NOT NULL
                     , NullableBoolColumn BIT NULL
                     , NullableIntColumn INT NULL
+                    , IntColumn2 INT NOT NULL
+                    , BoolColumn2 BIT NOT NULL
+                    , StringColumn2 NVARCHAR(25) NOT NULL
+                    , GuidColumn2 UNIQUEIDENTIFIER NOT NULL
+                    , LongColumn2 BIGINT NOT NULL
+                    , DecimalColumn2 FLOAT NOT NULL
+                    , DoubleColumn2 FLOAT NOT NULL
+                    , DateTimeColumn2 DATETIME NOT NULL
+                    , NullableBoolColumn2 BIT NULL
+                    , NullableIntColumn2 INT NULL
                     , Int2Column INT NOT NULL
                     , Int3Column INT NOT NULL
                     , Int4Column INT NOT NULL
@@ -67,7 +85,7 @@ namespace Microsoft.Data.SqlClient.Benchmark.CLI
                 )
         ";
 
-        public static IDataReader CreateReader(IEnumerable<ItemToCopy> items) => new EnumerableDataReaderFactoryBuilder<ItemToCopy>(TableName)
+        public static IDataReader CreateReader(IEnumerable<ItemToCopy> items, string TableName) => new EnumerableDataReaderFactoryBuilder<ItemToCopy>(TableName)
                 .Add("IntColumn", i => i.IntColumn)
                 .Add("BoolColumn", i => i.BoolColumn)
                 .Add("StringColumn", i => i.StringColumn)
@@ -78,6 +96,16 @@ namespace Microsoft.Data.SqlClient.Benchmark.CLI
                 .Add("DateTimeColumn", i => i.DateTimeColumn)
                 .Add("NullableBoolColumn", i => i.NullableBoolColumn)
                 .Add("NullableIntColumn", i => i.NullableIntColumn)
+                .Add("IntColumn2", i => i.IntColumn)
+                .Add("BoolColumn2", i => i.BoolColumn)
+                .Add("StringColumn2", i => i.StringColumn)
+                .Add("GuidColumn2", i => i.GuidColumn)
+                .Add("LongColumn2", i => i.LongColumn)
+                .Add("DecimalColumn2", i => i.DecimalColumn)
+                .Add("DoubleColumn2", i => i.DoubleColumn)
+                .Add("DateTimeColumn2", i => i.DateTimeColumn)
+                .Add("NullableBoolColumn2", i => i.NullableBoolColumn)
+                .Add("NullableIntColumn2", i => i.NullableIntColumn)
                 .Add("Int2Column", i => i.IntColumn)
                 .Add("Int3Column", i => i.IntColumn)
                 .Add("Int4Column", i => i.IntColumn)
