@@ -56,7 +56,7 @@ namespace Microsoft.Data.SqlClient
 
             if (!string.IsNullOrEmpty(configSection.ApplicationClientId))
             {
-                _applicationClientId = configSection.ApplicationClientId;
+                // _applicationClientId = configSection.ApplicationClientId;
                 _sqlAuthLogger.LogInfo(_typeName, methodName, "Received user-defined Application Client Id");
             }
             else

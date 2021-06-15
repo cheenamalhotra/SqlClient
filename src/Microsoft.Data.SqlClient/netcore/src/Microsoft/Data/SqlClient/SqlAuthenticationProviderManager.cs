@@ -27,7 +27,7 @@ namespace Microsoft.Data.SqlClient
         private readonly IReadOnlyCollection<SqlAuthenticationMethod> _authenticationsWithAppSpecifiedProvider;
         private readonly ConcurrentDictionary<SqlAuthenticationMethod, SqlAuthenticationProvider> _providers;
         private readonly SqlClientLogger _sqlAuthLogger = new SqlClientLogger();
-        private readonly string _applicationClientId = ActiveDirectoryAuthentication.AdoClientId;
+        // private readonly string _applicationClientId = ActiveDirectoryAuthentication.AdoClientId;
 
         public static readonly SqlAuthenticationProviderManager Instance;
 
@@ -39,7 +39,10 @@ namespace Microsoft.Data.SqlClient
         {
             if (instance != null)
             {
-                var activeDirectoryAuthProvider = new ActiveDirectoryAuthenticationProvider(instance._applicationClientId);
+                // Get AuthenticationProvider from AssemblyDependencyResolver.ResolveAssemblyToPath (System.Reflection.AssemblyName assemblyName);
+                // Sample program: https://github.com/dotnet/samples/blob/main/core/extensions/AppWithPlugin/AppWithPlugin/Program.cs
+
+                SqlAuthenticationProvider activeDirectoryAuthProvider = default; //new ActiveDirectoryAuthenticationProvider(instance._applicationClientId);
                 instance.SetProvider(SqlAuthenticationMethod.ActiveDirectoryIntegrated, activeDirectoryAuthProvider);
                 instance.SetProvider(SqlAuthenticationMethod.ActiveDirectoryPassword, activeDirectoryAuthProvider);
                 instance.SetProvider(SqlAuthenticationMethod.ActiveDirectoryInteractive, activeDirectoryAuthProvider);

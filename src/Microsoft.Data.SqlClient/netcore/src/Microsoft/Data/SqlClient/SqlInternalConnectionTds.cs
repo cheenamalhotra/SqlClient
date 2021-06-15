@@ -8,7 +8,6 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Security;
 using System.Text;
@@ -17,7 +16,6 @@ using System.Threading.Tasks;
 using System.Transactions;
 using Microsoft.Data.Common;
 using Microsoft.Data.ProviderBase;
-using Microsoft.Identity.Client;
 
 namespace Microsoft.Data.SqlClient
 {
@@ -2411,19 +2409,11 @@ namespace Microsoft.Data.SqlClient
                     break;
                 }
                 // Deal with Msal service exceptions first, retry if 429 received.
-                catch (MsalServiceException serviceException)
+                catch (SqlException serviceException)
                 {
-                    if (429 == serviceException.StatusCode)
+                    if (429 == serviceException.ErrorCode)
                     {
-                        RetryConditionHeaderValue retryAfter = serviceException.Headers.RetryAfter;
-                        if (retryAfter.Delta.HasValue)
-                        {
-                            sleepInterval = retryAfter.Delta.Value.Milliseconds;
-                        }
-                        else if (retryAfter.Date.HasValue)
-                        {
-                            sleepInterval = Convert.ToInt32(retryAfter.Date.Value.Offset.TotalMilliseconds);
-                        }
+                        sleepInterval = int.Parse(serviceException.Data?["SleepInterval"].ToString());
 
                         // if there's enough time to retry before timeout, then retry, otherwise break out the retry loop.
                         if (sleepInterval < _timeout.MillisecondsRemaining)
@@ -2437,19 +2427,20 @@ namespace Microsoft.Data.SqlClient
                     }
                 }
                 // Deal with normal MsalExceptions.
-                catch (MsalException msalException)
+                catch (Exception msalException)
                 {
-                    if (MsalError.UnknownError != msalException.ErrorCode
+                    int errorCode = int.Parse(msalException.Data?["ErrorCode"].ToString());
+                    if (-1 != errorCode
                         || _timeout.IsExpired
                         || _timeout.MillisecondsRemaining <= sleepInterval)
                     {
-                        SqlClientEventSource.Log.TryTraceEvent("<sc.SqlInternalConnectionTds.GetFedAuthToken.MSALException error:> {0}", msalException.ErrorCode);
+                        SqlClientEventSource.Log.TryTraceEvent("<sc.SqlInternalConnectionTds.GetFedAuthToken.MSALException error:> {0}", errorCode);
                         // Error[0]
                         SqlErrorCollection sqlErs = new SqlErrorCollection();
                         sqlErs.Add(new SqlError(0, (byte)0x00, (byte)TdsEnums.MIN_ERROR_CLASS, ConnectionOptions.DataSource, StringsHelper.GetString(Strings.SQL_MSALFailure, username, ConnectionOptions.Authentication.ToString("G")), ActiveDirectoryAuthentication.MSALGetAccessTokenFunctionName, 0));
 
                         // Error[1]
-                        string errorMessage1 = StringsHelper.GetString(Strings.SQL_MSALInnerException, msalException.ErrorCode);
+                        string errorMessage1 = StringsHelper.GetString(Strings.SQL_MSALInnerException, errorCode);
                         sqlErs.Add(new SqlError(0, (byte)0x00, (byte)TdsEnums.MIN_ERROR_CLASS, ConnectionOptions.DataSource, errorMessage1, ActiveDirectoryAuthentication.MSALGetAccessTokenFunctionName, 0));
 
                         // Error[2]
