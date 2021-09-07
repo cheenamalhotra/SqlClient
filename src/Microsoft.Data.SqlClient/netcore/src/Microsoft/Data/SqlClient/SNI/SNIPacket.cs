@@ -282,8 +282,8 @@ namespace Microsoft.Data.SqlClient.SNI
                     continuationAction: _readCallback,
                     state: callback,
                     CancellationToken.None,
-                    TaskContinuationOptions.DenyChildAttach,
-                    TaskScheduler.Default
+                    TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Current
                 );
         }
 
