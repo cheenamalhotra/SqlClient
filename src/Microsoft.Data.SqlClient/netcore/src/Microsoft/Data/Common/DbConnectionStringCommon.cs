@@ -101,6 +101,7 @@ namespace Microsoft.Data.Common
         private const string ApplicationIntentReadOnlyString = "ReadOnly";
 
         const string SqlPasswordString = "Sql Password";
+        const string SqlCertificateString = "Sql Certificate";
         const string ActiveDirectoryPasswordString = "Active Directory Password";
         const string ActiveDirectoryIntegratedString = "Active Directory Integrated";
         const string ActiveDirectoryInteractiveString = "Active Directory Interactive";
@@ -115,7 +116,9 @@ namespace Microsoft.Data.Common
         {
             "NotSpecified",
             "SqlPassword",
+            "SqlCertificate",
             "ActiveDirectoryPassword",
+            "ActiveDirectoryIntegrated",
             "ActiveDirectoryIntegrated",
             "ActiveDirectoryInteractive",
             "ActiveDirectoryServicePrincipal",
@@ -202,6 +205,12 @@ namespace Microsoft.Data.Common
                 || StringComparer.InvariantCultureIgnoreCase.Equals(value, Convert.ToString(SqlAuthenticationMethod.ActiveDirectoryDefault, CultureInfo.InvariantCulture)))
             {
                 result = SqlAuthenticationMethod.ActiveDirectoryDefault;
+                isSuccess = true;
+            }
+            else if (StringComparer.InvariantCultureIgnoreCase.Equals(value, SqlCertificateString)
+                || StringComparer.InvariantCultureIgnoreCase.Equals(value, Convert.ToString(SqlAuthenticationMethod.SqlCertificate, CultureInfo.InvariantCulture)))
+            {
+                result = SqlAuthenticationMethod.SqlCertificate;
                 isSuccess = true;
             }
             else
@@ -648,7 +657,7 @@ namespace Microsoft.Data.Common
 
         internal static bool IsValidAuthenticationTypeValue(SqlAuthenticationMethod value)
         {
-            Debug.Assert(Enum.GetNames(typeof(SqlAuthenticationMethod)).Length == 10, "SqlAuthenticationMethod enum has changed, update needed");
+            Debug.Assert(Enum.GetNames(typeof(SqlAuthenticationMethod)).Length == 11, "SqlAuthenticationMethod enum has changed, update needed");
             return value == SqlAuthenticationMethod.SqlPassword
                 || value == SqlAuthenticationMethod.ActiveDirectoryPassword
                 || value == SqlAuthenticationMethod.ActiveDirectoryIntegrated
@@ -658,6 +667,7 @@ namespace Microsoft.Data.Common
                 || value == SqlAuthenticationMethod.ActiveDirectoryManagedIdentity
                 || value == SqlAuthenticationMethod.ActiveDirectoryMSI
                 || value == SqlAuthenticationMethod.ActiveDirectoryDefault
+                || value == SqlAuthenticationMethod.SqlCertificate
                 || value == SqlAuthenticationMethod.NotSpecified;
         }
 
@@ -685,6 +695,8 @@ namespace Microsoft.Data.Common
                     return ActiveDirectoryMSIString;
                 case SqlAuthenticationMethod.ActiveDirectoryDefault:
                     return ActiveDirectoryDefaultString;
+                case SqlAuthenticationMethod.SqlCertificate:
+                    return SqlCertificateString;
                 default:
                     return null;
             }
@@ -964,6 +976,13 @@ namespace Microsoft.Data.Common
             }
         }
         #endregion
+
+        internal static bool IsValidCertificateValue(string value)
+        {
+            return string.IsNullOrEmpty(value)
+                || value.StartsWith("subject:", StringComparison.OrdinalIgnoreCase)
+                || value.StartsWith("sha1:", StringComparison.OrdinalIgnoreCase);
+        }
     }
 
     internal static partial class DbConnectionStringDefaults
@@ -1007,6 +1026,7 @@ namespace Microsoft.Data.Common
         internal static readonly SqlAuthenticationMethod Authentication = SqlAuthenticationMethod.NotSpecified;
         internal const SqlConnectionColumnEncryptionSetting ColumnEncryptionSetting = SqlConnectionColumnEncryptionSetting.Disabled;
         internal const string EnclaveAttestationUrl = _emptyString;
+        internal const string Certificate = _emptyString;
         internal const SqlConnectionAttestationProtocol AttestationProtocol = SqlConnectionAttestationProtocol.NotSpecified;
         internal const SqlConnectionIPAddressPreference IPAddressPreference = SqlConnectionIPAddressPreference.IPv4First;
     }
@@ -1041,6 +1061,7 @@ namespace Microsoft.Data.Common
         internal const string ConnectRetryCount = "Connect Retry Count";
         internal const string ConnectRetryInterval = "Connect Retry Interval";
         internal const string Authentication = "Authentication";
+        internal const string Certificate = "Certificate";
         internal const string ColumnEncryptionSetting = "Column Encryption Setting";
         internal const string EnclaveAttestationUrl = "Enclave Attestation Url";
         internal const string AttestationProtocol = "Attestation Protocol";

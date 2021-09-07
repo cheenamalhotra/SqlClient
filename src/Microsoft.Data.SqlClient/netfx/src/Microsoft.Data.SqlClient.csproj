@@ -54,6 +54,7 @@
     <GenerateAssemblyAttribute>true</GenerateAssemblyAttribute>
     <RawClDefines>$(RawClDefines);SUPPRESS_SECURITY_RULES=1</RawClDefines>
     <!-- ADO.NET internal defines -->
+    <AdoNetService>true</AdoNetService>
     <UseOwnAssemblyVersionOnly Condition="'$(AdoNetService)'=='true'">true</UseOwnAssemblyVersionOnly>
     <DefineConstants Condition="'$(AdoNetService)'=='true'">$(DefineConstants);ADONET_SERVICE;ADONET_CERT_AUTH;ADONET_ORIGINAL_CLIENT_ADDRESS</DefineConstants>
     <ComCompatibleSideBySide>True</ComCompatibleSideBySide>
@@ -267,6 +268,9 @@
     <Compile Include="..\..\src\Microsoft\Data\SqlClient\SqlBulkCopyColumnOrderHintCollection.cs">
       <Link>Microsoft\Data\SqlClient\SqlBulkCopyColumnOrderHintCollection.cs</Link>
     </Compile>
+    <Compile Include="..\..\src\Microsoft\Data\SqlClient\SqlCertificateCallbacks.cs">
+      <Link>Microsoft\Data\SqlClient\SqlCertificateCallbacks.cs</Link>
+    </Compile>
     <Compile Include="..\..\src\Microsoft\Data\SqlClient\SqlClientEncryptionAlgorithm.cs">
       <Link>Microsoft\Data\SqlClient\SqlClientEncryptionAlgorithm.cs</Link>
     </Compile>
@@ -278,6 +282,9 @@
     </Compile>
     <Compile Include="..\..\src\Microsoft\Data\SqlClient\SqlClientEncryptionType.cs">
       <Link>Microsoft\Data\SqlClient\SqlClientEncryptionType.cs</Link>
+    </Compile>
+    <Compile Include="..\..\src\Microsoft\Data\SqlClient\SqlClientOriginalNetworkAddressInfo.cs">
+      <Link>Microsoft\Data\SqlClient\SqlClientOriginalNetworkAddressInfo.cs</Link>
     </Compile>
     <Compile Include="..\..\src\Microsoft\Data\SqlClient\SqlClientSymmetricKey.cs">
       <Link>Microsoft\Data\SqlClient\SqlClientSymmetricKey.cs</Link>
@@ -436,10 +443,8 @@
     <Compile Include="Microsoft\Data\SqlClient\SqlBulkCopy.cs" />
     <Compile Include="Microsoft\Data\SqlClient\SqlBulkCopyColumnMappingCollection.cs" />
     <Compile Include="Microsoft\Data\SqlClient\SqlCachedBuffer.cs" />
-    <Compile Include="Microsoft\Data\SqlClient\SqlCertificateCallbacks.cs" />
     <Compile Include="Microsoft\Data\SqlClient\SqlClientFactory.cs" />
     <Compile Include="Microsoft\Data\SqlClient\SqlClientMetaDataCollectionNames.cs" />
-    <Compile Include="Microsoft\Data\SqlClient\SqlClientOriginalAddressInfo.cs" />
     <Compile Include="Microsoft\Data\SqlClient\SqlClientPermission.cs" />
     <Compile Include="Microsoft\Data\SqlClient\SqlClientWrapperSmiStream.cs" />
     <Compile Include="Microsoft\Data\SqlClient\SqlColumnEncryptionCertificateStoreProvider.cs" />

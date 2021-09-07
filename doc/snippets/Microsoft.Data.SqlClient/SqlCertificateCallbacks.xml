@@ -1,0 +1,13 @@
+<docs>
+  <members name="SqlCertificateCallbacks">
+    <ClientCertificateRetrievalCallback>
+      <summary>A callback to provide client certificate on demand from a store normally different from system certificate store.</summary>
+      <returns>Client Certificate from trusted store</returns>
+    </ClientCertificateRetrievalCallback>
+    <ServerCertificateValidationCallback>
+      <summary>A callback to validate server certificate.</summary>
+      <param name="certificate">Certificate to be validated</param>
+      <returns>'true' for a valid certificate, 'false' otherwise.</returns>
+    </ServerCertificateValidationCallback>
+  </members>
+</docs>

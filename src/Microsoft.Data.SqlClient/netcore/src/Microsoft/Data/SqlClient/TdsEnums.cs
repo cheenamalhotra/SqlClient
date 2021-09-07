@@ -1160,8 +1160,12 @@ namespace Microsoft.Data.SqlClient
         ActiveDirectoryMSI,
 
         /// <include file='../../../../../../../doc/snippets/Microsoft.Data.SqlClient/SqlAuthenticationMethod.xml' path='docs/members[@name="SqlAuthenticationMethod"]/ActiveDirectoryDefault/*'/>
-        ActiveDirectoryDefault
+        ActiveDirectoryDefault,
+
+        /// <include file='../../../../../../../doc/snippets/Microsoft.Data.SqlClient/SqlAuthenticationMethod.xml' path='docs/members[@name="SqlAuthenticationMethod"]/SqlCerificate/*'/>
+        SqlCertificate
     }
+
     // This enum indicates the state of TransparentNetworkIPResolution
     // The first attempt when TNIR is on should be sequential. If the first attempt failes next attempts should be parallel.
     internal enum TransparentNetworkResolutionState

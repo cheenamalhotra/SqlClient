@@ -182,6 +182,10 @@ For more information, see [Using Azure Active Directory authentication with SqlC
  ]]></format>
             </remarks>
         </Authentication>
+        <Certificate>
+            <summary>Gets or sets the client certificate for authenticating with SQL Server.</summary>
+            <remarks></remarks>
+        </Certificate>
         <Clear>
             <summary>Clears the contents of the <see cref="T:Microsoft.Data.SqlClient.SqlConnectionStringBuilder" /> instance.</summary>
             <remarks>

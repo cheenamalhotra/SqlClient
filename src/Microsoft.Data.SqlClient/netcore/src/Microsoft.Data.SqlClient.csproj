@@ -31,6 +31,10 @@
   <PropertyGroup>
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
+    <!-- ADO.NET internal defines -->
+    <AdoNetService>true</AdoNetService>
+    <UseOwnAssemblyVersionOnly Condition="'$(AdoNetService)'=='true'">true</UseOwnAssemblyVersionOnly>
+    <DefineConstants Condition="'$(AdoNetService)'=='true'">$(DefineConstants);ADONET_SERVICE;ADONET_CERT_AUTH;ADONET_ORIGINAL_CLIENT_ADDRESS</DefineConstants>
   </PropertyGroup>
   <!-- Contains common items shared between NetFx and NetCore -->
   <ItemGroup Condition="'$(OSGroup)' != 'AnyOS'">
@@ -196,6 +200,9 @@
     <Compile Include="..\..\src\Microsoft\Data\SqlClient\SqlBulkCopyColumnOrderHintCollection.cs">
       <Link>Microsoft\Data\SqlClient\SqlBulkCopyColumnOrderHintCollection.cs</Link>
     </Compile>
+    <Compile Include="..\..\src\Microsoft\Data\SqlClient\SqlCertificateCallbacks.cs">
+      <Link>Microsoft\Data\SqlClient\SqlCertificateCallbacks.cs</Link>
+    </Compile>
     <Compile Include="..\..\src\Microsoft\Data\SqlClient\SqlClientEncryptionAlgorithm.cs">
       <Link>Microsoft\Data\SqlClient\SqlClientEncryptionAlgorithm.cs</Link>
     </Compile>
@@ -207,6 +214,9 @@
     </Compile>
     <Compile Include="..\..\src\Microsoft\Data\SqlClient\SqlClientEncryptionType.cs">
       <Link>Microsoft\Data\SqlClient\SqlClientEncryptionType.cs</Link>
+    </Compile>
+    <Compile Include="..\..\src\Microsoft\Data\SqlClient\SqlClientOriginalNetworkAddressInfo.cs">
+      <Link>Microsoft\Data\SqlClient\SqlClientOriginalNetworkAddressInfo.cs</Link>
     </Compile>
     <Compile Include="..\..\src\Microsoft\Data\SqlClient\SqlClientSymmetricKey.cs">
       <Link>Microsoft\Data\SqlClient\SqlClientSymmetricKey.cs</Link>
@@ -388,7 +398,6 @@
   <ItemGroup Condition="'$(OSGroup)' != 'AnyOS' AND '$(TargetGroup)' == 'netcoreapp'">
     <Compile Include="Microsoft\Data\ProviderBase\DbConnectionPool.NetCoreApp.cs" />
     <Compile Include="Microsoft\Data\SqlClient\SqlAuthenticationProviderManager.NetCoreApp.cs" />
-    <Compile Include="Microsoft\Data\SqlClient\SqlConnectionString.NetCoreApp.cs" />
     <Compile Include="Microsoft\Data\SqlClient\SqlDiagnosticListener.NetCoreApp.cs" />
     <Compile Include="Microsoft\Data\SqlClient\SqlDelegatedTransaction.NetCoreApp.cs" />
     <Compile Include="Microsoft\Data\SqlClient\TdsParser.NetCoreApp.cs" />

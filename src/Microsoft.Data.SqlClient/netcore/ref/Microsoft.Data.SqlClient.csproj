@@ -11,6 +11,9 @@
     <TargetGroup Condition="$(TargetFramework.StartsWith('netcoreapp'))">netcoreapp</TargetGroup>
     <TargetGroup Condition="$(TargetFramework.StartsWith('netstandard'))">netstandard</TargetGroup>
     <Platforms>AnyCPU;x64;x86</Platforms>
+    <!-- ADO.NET internal defines -->
+    <AdoNetService>true</AdoNetService>
+    <DefineConstants Condition="'$(AdoNetService)'=='true'">$(DefineConstants);ADONET_CERT_AUTH</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetGroup)' == 'netstandard' AND !$(TargetFramework.StartsWith('netstandard1.')) AND $(TargetFramework) != 'netstandard2.0'">
     <DefineConstants>$(DefineConstants);NETSTANDARD21_AND_ABOVE</DefineConstants>

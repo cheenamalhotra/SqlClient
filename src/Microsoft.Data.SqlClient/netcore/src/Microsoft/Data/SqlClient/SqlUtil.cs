@@ -366,6 +366,10 @@ namespace Microsoft.Data.SqlClient
         {
             return ADP.InvalidOperation(System.StringsHelper.GetString(Strings.SQL_CredentialsNotProvided, DbConnectionStringBuilderUtil.AuthenticationTypeToString(auth)));
         }
+        static internal Exception InvalidCertAuth()
+        {
+            return ADP.Argument(StringsHelper.GetString(Strings.SQL_Certificate));
+        }
         internal static Exception ParsingErrorLibraryType(ParsingErrorState state, int libraryType)
         {
             return ADP.InvalidOperation(System.StringsHelper.GetString(Strings.SQL_ParsingErrorAuthLibraryType, ((int)state).ToString(CultureInfo.InvariantCulture), libraryType));

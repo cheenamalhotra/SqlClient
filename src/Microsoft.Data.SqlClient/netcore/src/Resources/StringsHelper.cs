@@ -1198,7 +1198,7 @@ namespace System
             internal const string DbConnectionString_ConnectRetryCount = @"Number of attempts to restore connection.";
             internal const string DbConnectionString_ConnectRetryInterval = @"Delay between attempts to restore connection.";
             internal const string DbConnectionString_Authentication = @"Specifies the method of authenticating with SQL Server.";
-            internal const string DbConnectionString_Certificate = @"Specified client certificate for authenticating with SQL Server.  ";
+            internal const string DbConnectionString_Certificate = @"Specifies client certificate for authenticating with SQL Server.";
             internal const string OdbcConnection_ConnectionString = @"Information used to connect to a Data Source.";
             internal const string OdbcConnection_ConnectionTimeout = @"Current connection timeout value, not settable in the ConnectionString.";
             internal const string OdbcConnection_Database = @"Current data source catalog value, 'Database=X' in the connection string.";

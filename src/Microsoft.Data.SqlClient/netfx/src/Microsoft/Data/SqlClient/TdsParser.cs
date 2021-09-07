@@ -8766,6 +8766,7 @@ namespace Microsoft.Data.SqlClient
                 SNINativeMethodWrapper.CTAIPProviderInfo cauthInfo = new SNINativeMethodWrapper.CTAIPProviderInfo();
                 cauthInfo.originalNetworkAddress = originalNetworkAddressInfo.Address.GetAddressBytes();
                 cauthInfo.fromDataSecurityProxy = originalNetworkAddressInfo.IsFromDataSecurityProxy;
+                cauthInfo.isVnetAddress = originalNetworkAddressInfo.IsVnetAddress;
 
                 UInt32 error = SNINativeMethodWrapper.SNIAddProvider(_physicalStateObj.Handle, SNINativeMethodWrapper.ProviderEnum.CTAIP_PROV, cauthInfo);
                 if (error != TdsEnums.SNI_SUCCESS)

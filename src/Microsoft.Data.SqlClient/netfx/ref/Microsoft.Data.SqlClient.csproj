@@ -7,6 +7,9 @@
     <DocumentationFile>$(OutputPath)\Microsoft.Data.SqlClient.xml</DocumentationFile>
     <Product>Framework $(BaseProduct)</Product>
     <Configurations>Debug;Release;</Configurations>
+    <!-- ADO.NET internal defines -->
+    <AdoNetService>true</AdoNetService>
+    <DefineConstants Condition="'$(AdoNetService)'=='true'">$(DefineConstants);ADONET_CERT_AUTH</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Microsoft.Data.SqlClient.cs" />

@@ -183,7 +183,8 @@ namespace Microsoft.Data.SqlClient
         internal struct CTAIPProviderInfo
         {
             internal byte[] originalNetworkAddress;
-            internal Boolean fromDataSecurityProxy;
+            internal bool fromDataSecurityProxy;
+            internal bool isVnetAddress;
         };
 
         struct SNIAuthProviderInfoWrapper

@@ -55,6 +55,7 @@ namespace Microsoft.Data.SqlClient
             internal const string EnclaveAttestationUrl = _emptyString;
             internal static readonly SqlConnectionAttestationProtocol AttestationProtocol = SqlConnectionAttestationProtocol.NotSpecified;
             internal static readonly SqlConnectionIPAddressPreference s_IPAddressPreference = SqlConnectionIPAddressPreference.IPv4First;
+            internal const string Certificate = _emptyString;
         }
 
         // SqlConnection ConnectionString Options
@@ -69,7 +70,6 @@ namespace Microsoft.Data.SqlClient
             internal const string EnclaveAttestationUrl = "enclave attestation url";
             internal const string AttestationProtocol = "attestation protocol";
             internal const string IPAddressPreference = "ip address preference";
-
             internal const string Command_Timeout = "command timeout";
             internal const string Connect_Timeout = "connect timeout";
             internal const string Connection_Reset = "connection reset";
@@ -101,6 +101,7 @@ namespace Microsoft.Data.SqlClient
             internal const string Connect_Retry_Count = "connect retry count";
             internal const string Connect_Retry_Interval = "connect retry interval";
             internal const string Authentication = "authentication";
+            internal const string Certificate = "certificate";
         }
 
         // Constant for the number of duplicate options in the connection string
@@ -230,7 +231,7 @@ namespace Microsoft.Data.SqlClient
         private readonly string _initialCatalog;
         private readonly string _password;
         private readonly string _userID;
-
+        private readonly string _certificate;
         private readonly string _workstationId;
 
         private readonly TransactionBindingEnum _transactionBinding;
@@ -288,6 +289,8 @@ namespace Microsoft.Data.SqlClient
             _enclaveAttestationUrl = ConvertValueToString(KEY.EnclaveAttestationUrl, DEFAULT.EnclaveAttestationUrl);
             _attestationProtocol = ConvertValueToAttestationProtocol();
             _ipAddressPreference = ConvertValueToIPAddressPreference();
+
+            _certificate = ConvertValueToString(KEY.Certificate, DEFAULT.Certificate);
 
             // Temporary string - this value is stored internally as an enum.
             string typeSystemVersionString = ConvertValueToString(KEY.Type_System_Version, null);
@@ -485,6 +488,28 @@ namespace Microsoft.Data.SqlClient
             {
                 throw SQL.NonInteractiveWithPassword(DbConnectionStringBuilderUtil.ActiveDirectoryDefaultString);
             }
+
+            if (!DbConnectionStringBuilderUtil.IsValidCertificateValue(_certificate))
+            {
+                throw ADP.InvalidConnectionOptionValue(KEY.Certificate);
+            }
+
+            if (!string.IsNullOrEmpty(_certificate))
+            {
+                if (Authentication == SqlAuthenticationMethod.NotSpecified && !_integratedSecurity)
+                {
+                    _authType = SqlAuthenticationMethod.SqlCertificate;
+                }
+
+                if (Authentication == SqlAuthenticationMethod.SqlCertificate && (HasUserIdKeyword || HasPasswordKeyword || _integratedSecurity))
+                {
+                    throw SQL.InvalidCertAuth();
+                }
+            }
+            else if (Authentication == SqlAuthenticationMethod.SqlCertificate)
+            {
+                throw ADP.InvalidConnectionOptionValue(KEY.Authentication);
+            }
         }
 
         // This c-tor is used to create SSE and user instance connection strings when user instance is set to true
@@ -536,6 +561,7 @@ namespace Microsoft.Data.SqlClient
             _columnEncryptionSetting = connectionOptions._columnEncryptionSetting;
             _enclaveAttestationUrl = connectionOptions._enclaveAttestationUrl;
             _attestationProtocol = connectionOptions._attestationProtocol;
+            _certificate = connectionOptions._certificate;
 
             ValidateValueLength(_dataSource, TdsEnums.MAXLEN_SERVERNAME, KEY.Data_Source);
         }
@@ -558,6 +584,8 @@ namespace Microsoft.Data.SqlClient
         internal string EnclaveAttestationUrl { get { return _enclaveAttestationUrl; } }
         internal SqlConnectionAttestationProtocol AttestationProtocol { get { return _attestationProtocol; } }
         internal SqlConnectionIPAddressPreference IPAddressPreference => _ipAddressPreference;
+        internal string Certificate { get { return _certificate; } }
+        internal bool UsesCertificate { get { return _authType == SqlAuthenticationMethod.SqlCertificate; } }
         internal bool PersistSecurityInfo { get { return _persistSecurityInfo; } }
         internal bool Pooling { get { return _pooling; } }
         internal bool Replication { get { return _replication; } }
@@ -685,6 +713,7 @@ namespace Microsoft.Data.SqlClient
                     { KEY.Connect_Retry_Interval, KEY.Connect_Retry_Interval },
                     { KEY.Authentication, KEY.Authentication },
                     { KEY.IPAddressPreference, KEY.IPAddressPreference },
+                    { KEY.Certificate, KEY.Certificate },
 
                     { SYNONYM.APP, KEY.Application_Name },
                     { SYNONYM.APPLICATIONINTENT, KEY.ApplicationIntent },

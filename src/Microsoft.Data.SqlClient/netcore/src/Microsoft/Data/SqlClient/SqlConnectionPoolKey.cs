@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Diagnostics;
 using Microsoft.Data.Common;
 
@@ -15,6 +14,9 @@ namespace Microsoft.Data.SqlClient
         private int _hashValue;
         private SqlCredential _credential;
         private readonly string _accessToken;
+        public ServerCertificateValidationCallback _serverCertificateValidationCallback;
+        public ClientCertificateRetrievalCallback _clientCertificateRetrievalCallback;
+        public SqlClientOriginalNetworkAddressInfo _originalNetworkAddressInfo;
 
         internal SqlConnectionPoolKey(string connectionString, SqlCredential credential, string accessToken) : base(connectionString)
         {
@@ -29,6 +31,13 @@ namespace Microsoft.Data.SqlClient
             _credential = key.Credential;
             _accessToken = key.AccessToken;
             CalculateHashCode();
+        }
+
+        public SqlConnectionPoolKey(string connectionString, SqlCredential credential, string accessToken, ServerCertificateValidationCallback serverCertificateValidationCallback, ClientCertificateRetrievalCallback clientCertificateRetrievalCallback, SqlClientOriginalNetworkAddressInfo originalNetworkAddressInfo) : this(connectionString, credential, accessToken)
+        {
+            _serverCertificateValidationCallback = serverCertificateValidationCallback;
+            _clientCertificateRetrievalCallback = clientCertificateRetrievalCallback;
+            _originalNetworkAddressInfo = originalNetworkAddressInfo;
         }
 
         public override object Clone()
@@ -60,13 +69,20 @@ namespace Microsoft.Data.SqlClient
             }
         }
 
+        internal ServerCertificateValidationCallback ServerCertificateValidationCallback { get { return _serverCertificateValidationCallback; } }
+        internal ClientCertificateRetrievalCallback ClientCertificateRetrievalCallback { get { return _clientCertificateRetrievalCallback; } }
+        internal SqlClientOriginalNetworkAddressInfo OriginalNetworkAddressInfo { get { return _originalNetworkAddressInfo; } }
+
         public override bool Equals(object obj)
         {
             SqlConnectionPoolKey key = obj as SqlConnectionPoolKey;
             return (key != null
                 && _credential == key._credential
                 && ConnectionString == key.ConnectionString
-                && string.CompareOrdinal(_accessToken, key._accessToken) == 0);
+                && string.CompareOrdinal(_accessToken, key._accessToken) == 0)
+                && _serverCertificateValidationCallback == key._serverCertificateValidationCallback
+                && _clientCertificateRetrievalCallback == key._clientCertificateRetrievalCallback
+                && _originalNetworkAddressInfo.Equals(key._originalNetworkAddressInfo);
         }
 
         public override int GetHashCode()
@@ -91,6 +107,19 @@ namespace Microsoft.Data.SqlClient
                 {
                     _hashValue = _hashValue * 17 + _accessToken.GetHashCode();
                 }
+            }
+            
+            if(_serverCertificateValidationCallback != null)
+            {
+                _hashValue = _hashValue * 17 + _serverCertificateValidationCallback.GetHashCode();
+            }
+            if (_clientCertificateRetrievalCallback != null)
+            {
+                _hashValue = _hashValue * 17 + _clientCertificateRetrievalCallback.GetHashCode();
+            }
+            if (_originalNetworkAddressInfo != null)
+            {
+                _hashValue = _hashValue * 17 + _originalNetworkAddressInfo.GetHashCode();
             }
         }
     }

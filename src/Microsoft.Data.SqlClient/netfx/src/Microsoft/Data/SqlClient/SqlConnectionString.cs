@@ -586,22 +586,25 @@ namespace Microsoft.Data.SqlClient
             }
 
 #if ADONET_CERT_AUTH
-
-            if (!DbConnectionStringBuilderUtil.IsValidCertificateValue(_certificate)) {
+            if (!DbConnectionStringBuilderUtil.IsValidCertificateValue(_certificate))
+            {
                 throw ADP.InvalidConnectionOptionValue(KEY.Certificate);
             }
 
-            if (!string.IsNullOrEmpty(_certificate)) {
-
-                if (Authentication == SqlClient.SqlAuthenticationMethod.NotSpecified && !_integratedSecurity) {
-                    _authType = SqlClient.SqlAuthenticationMethod.SqlCertificate;
+            if (!string.IsNullOrEmpty(_certificate))
+            {
+                if (Authentication == SqlAuthenticationMethod.NotSpecified && !_integratedSecurity)
+                {
+                    _authType = SqlAuthenticationMethod.SqlCertificate;
                 }
 
-                if (Authentication == SqlClient.SqlAuthenticationMethod.SqlCertificate && (HasUserIdKeyword || HasPasswordKeyword || _integratedSecurity)) {
+                if (Authentication == SqlAuthenticationMethod.SqlCertificate && (HasUserIdKeyword || HasPasswordKeyword || _integratedSecurity))
+                {
                     throw SQL.InvalidCertAuth();
                 }
             }
-            else if (Authentication == SqlClient.SqlAuthenticationMethod.SqlCertificate) {
+            else if (Authentication == SqlClient.SqlAuthenticationMethod.SqlCertificate)
+            {
                 throw ADP.InvalidConnectionOptionValue(KEY.Authentication);
             }
 #endif
@@ -1077,7 +1080,7 @@ namespace Microsoft.Data.SqlClient
             }
             catch (FormatException e)
             {
-                 throw ADP.InvalidConnectionOptionValue(KEY.AttestationProtocol, e);
+                throw ADP.InvalidConnectionOptionValue(KEY.AttestationProtocol, e);
             }
             catch (OverflowException e)
             {

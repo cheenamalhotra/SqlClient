@@ -1932,4 +1932,7 @@
   <data name="SQL_ParameterDirectionInvalidForOptimizedBinding" xml:space="preserve">
     <value>Parameter '{0}' cannot have Direction Output or InputOutput when EnableOptimizedParameterBinding is enabled on the parent command.</value>
   </data>
+  <data name="SQL_Certificate" xml:space="preserve">
+    <value>Incorrect authentication parameters specified with certificate authentication.</value>
+  </data>
 </root>

@@ -1266,6 +1266,18 @@ Once the transaction has completed, you must explicitly commit or roll back the 
  ]]></format>
             </remarks>
         </System.ICloneable.Clone>
+        <ServerCertificateValidationCallback>
+          <summary></summary>
+          <remarks></remarks>
+        </ServerCertificateValidationCallback>
+        <ClientCertificateRetrievalCallback>
+          <summary></summary>
+          <remarks></remarks>
+        </ClientCertificateRetrievalCallback>
+        <OriginalNetworkAddressInfo>
+          <summary></summary>
+          <remarks></remarks>
+        </OriginalNetworkAddressInfo>
         <WorkstationId>
             <summary>Gets a string that identifies the database client.</summary>
             <value>A string that identifies the database client. If not specified, the name of the client computer. If neither is specified, the value is an empty string.</value>

@@ -44,6 +44,7 @@ namespace Microsoft.Data.SqlClient
             PacketSize,
             TypeSystemVersion,
             Authentication,
+            Certificate,
             ApplicationName,
             CurrentLanguage,
             WorkstationID,
@@ -109,6 +110,7 @@ namespace Microsoft.Data.SqlClient
         private string _enclaveAttestationUrl = DbConnectionStringDefaults.EnclaveAttestationUrl;
         private SqlConnectionAttestationProtocol _attestationProtocol = DbConnectionStringDefaults.AttestationProtocol;
         private SqlConnectionIPAddressPreference _ipAddressPreference = DbConnectionStringDefaults.IPAddressPreference;
+        private string _certificate = DbConnectionStringDefaults.Certificate;
 
         private static string[] CreateValidKeywords()
         {
@@ -150,6 +152,7 @@ namespace Microsoft.Data.SqlClient
             validKeywords[(int)Keywords.EnclaveAttestationUrl] = DbConnectionStringKeywords.EnclaveAttestationUrl;
             validKeywords[(int)Keywords.AttestationProtocol] = DbConnectionStringKeywords.AttestationProtocol;
             validKeywords[(int)Keywords.IPAddressPreference] = DbConnectionStringKeywords.IPAddressPreference;
+            validKeywords[(int)Keywords.Certificate] = DbConnectionStringKeywords.Certificate;
             return validKeywords;
         }
 
@@ -189,6 +192,7 @@ namespace Microsoft.Data.SqlClient
             hash.Add(DbConnectionStringKeywords.ConnectRetryCount, Keywords.ConnectRetryCount);
             hash.Add(DbConnectionStringKeywords.ConnectRetryInterval, Keywords.ConnectRetryInterval);
             hash.Add(DbConnectionStringKeywords.Authentication, Keywords.Authentication);
+            hash.Add(DbConnectionStringKeywords.Certificate, Keywords.Certificate);
             hash.Add(DbConnectionStringKeywords.ColumnEncryptionSetting, Keywords.ColumnEncryptionSetting);
             hash.Add(DbConnectionStringKeywords.EnclaveAttestationUrl, Keywords.EnclaveAttestationUrl);
             hash.Add(DbConnectionStringKeywords.AttestationProtocol, Keywords.AttestationProtocol);
@@ -328,6 +332,9 @@ namespace Microsoft.Data.SqlClient
                         case Keywords.IPAddressPreference:
                             IPAddressPreference = ConvertToIPAddressPreference(keyword, value);
                             break;
+                        case Keywords.Certificate:
+                            Certificate = ConvertToString(value);
+                            break;
                         case Keywords.PoolBlockingPeriod:
                             PoolBlockingPeriod = ConvertToPoolBlockingPeriod(keyword, value);
                             break;
@@ -364,7 +371,6 @@ namespace Microsoft.Data.SqlClient
                         case Keywords.ConnectRetryInterval:
                             ConnectRetryInterval = ConvertToInt32(value);
                             break;
-
                         default:
                             Debug.Fail("unexpected keyword");
                             throw UnsupportedKeyword(keyword);
@@ -679,6 +685,26 @@ namespace Microsoft.Data.SqlClient
 
                 SetAuthenticationValue(value);
                 _authentication = value;
+            }
+        }
+
+        /// <include file='..\..\..\..\..\..\..\doc\snippets\Microsoft.Data.SqlClient\SqlConnectionStringBuilder.xml' path='docs/members[@name="SqlConnectionStringBuilder"]/Certificate/*' />
+        [DisplayName(DbConnectionStringKeywords.Certificate)]
+        [ResCategoryAttribute(StringsHelper.ResourceNames.DataCategory_Security)]
+        [ResDescriptionAttribute(StringsHelper.ResourceNames.DbConnectionString_Certificate)]
+        [RefreshPropertiesAttribute(RefreshProperties.All)]
+        public string Certificate
+        {
+            get { return _certificate; }
+            set
+            {
+                if (!DbConnectionStringBuilderUtil.IsValidCertificateValue(value))
+                {
+                    throw ADP.InvalidConnectionOptionValue(DbConnectionStringKeywords.Certificate);
+                }
+
+                SetValue(DbConnectionStringKeywords.Certificate, value);
+                _certificate = value;
             }
         }
 
@@ -1100,7 +1126,7 @@ namespace Microsoft.Data.SqlClient
             switch (index)
             {
                 case Keywords.ApplicationIntent:
-                    return this.ApplicationIntent;
+                    return ApplicationIntent;
                 case Keywords.ApplicationName:
                     return ApplicationName;
                 case Keywords.AttachDBFilename:
@@ -1172,6 +1198,8 @@ namespace Microsoft.Data.SqlClient
                     return AttestationProtocol;
                 case Keywords.IPAddressPreference:
                     return IPAddressPreference;
+                case Keywords.Certificate:
+                    return Certificate;
                 default:
                     Debug.Fail("unexpected keyword");
                     throw UnsupportedKeyword(s_validKeywords[(int)index]);
@@ -1181,8 +1209,7 @@ namespace Microsoft.Data.SqlClient
         private Keywords GetIndex(string keyword)
         {
             ADP.CheckArgumentNull(keyword, nameof(keyword));
-            Keywords index;
-            if (s_keywords.TryGetValue(keyword, out index))
+            if (s_keywords.TryGetValue(keyword, out Keywords index))
             {
                 return index;
             }
@@ -1193,8 +1220,7 @@ namespace Microsoft.Data.SqlClient
         public override bool Remove(string keyword)
         {
             ADP.CheckArgumentNull(keyword, nameof(keyword));
-            Keywords index;
-            if (s_keywords.TryGetValue(keyword, out index))
+            if (s_keywords.TryGetValue(keyword, out Keywords index))
             {
                 if (base.Remove(s_validKeywords[(int)index]))
                 {
@@ -1320,6 +1346,9 @@ namespace Microsoft.Data.SqlClient
                 case Keywords.IPAddressPreference:
                     _ipAddressPreference = DbConnectionStringDefaults.IPAddressPreference;
                     break;
+                case Keywords.Certificate:
+                    _certificate = DbConnectionStringDefaults.Certificate;
+                    break;
                 default:
                     Debug.Fail("unexpected keyword");
                     throw UnsupportedKeyword(s_validKeywords[(int)index]);
@@ -1378,15 +1407,13 @@ namespace Microsoft.Data.SqlClient
         public override bool ShouldSerialize(string keyword)
         {
             ADP.CheckArgumentNull(keyword, nameof(keyword));
-            Keywords index;
-            return s_keywords.TryGetValue(keyword, out index) && base.ShouldSerialize(s_validKeywords[(int)index]);
+            return s_keywords.TryGetValue(keyword, out Keywords index) && base.ShouldSerialize(s_validKeywords[(int)index]);
         }
 
         /// <include file='../../../../../../../doc/snippets/Microsoft.Data.SqlClient/SqlConnectionStringBuilder.xml' path='docs/members[@name="SqlConnectionStringBuilder"]/TryGetValue/*' />
         public override bool TryGetValue(string keyword, out object value)
         {
-            Keywords index;
-            if (s_keywords.TryGetValue(keyword, out index))
+            if (s_keywords.TryGetValue(keyword, out Keywords index))
             {
                 value = GetAt(index);
                 return true;

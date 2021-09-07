@@ -114,7 +114,9 @@ namespace Microsoft.Data.SqlClient
         /// <include file='../../../../doc/snippets/Microsoft.Data.SqlClient/SqlAuthenticationMethod.xml' path='docs/members[@name="SqlAuthenticationMethod"]/NotSpecified/*'/>
         NotSpecified = 0,
         /// <include file='../../../../doc/snippets/Microsoft.Data.SqlClient/SqlAuthenticationMethod.xml' path='docs/members[@name="SqlAuthenticationMethod"]/SqlPassword/*'/>
-        SqlPassword = 1
+        SqlPassword = 1,
+        /// <include file='../../../../doc/snippets/Microsoft.Data.SqlClient/SqlAuthenticationMethod.xml' path='docs/members[@name="SqlAuthenticationMethod"]/SqlCertificate/*'/>
+        SqlCertificate = 10
     }
     /// <include file='../../../../doc/snippets/Microsoft.Data.SqlClient/SqlAuthenticationParameters.xml' path='docs/members[@name="SqlAuthenticationParameters"]/SqlAuthenticationParameters/*'/>
     public partial class SqlAuthenticationParameters
@@ -830,9 +832,41 @@ namespace Microsoft.Data.SqlClient
         public System.Collections.IDictionary RetrieveStatistics() { throw null; }
         /// <include file='../../../../doc/snippets/Microsoft.Data.SqlClient/SqlConnection.xml' path='docs/members[@name="SqlConnection"]/RetrieveInternalInfo/*'/>
         public System.Collections.Generic.IDictionary<string, object> RetrieveInternalInfo() { throw null; }
+#if ADONET_CERT_AUTH
         /// <include file='../../../../doc/snippets/Microsoft.Data.SqlClient/SqlConnection.xml' path='docs/members[@name="SqlConnection"]/RetryLogicProvider/*' />
         public SqlRetryLogicBaseProvider RetryLogicProvider { get { throw null; } set { } }
+        /// <include file='../../../../doc/snippets/Microsoft.Data.SqlClient/SqlConnection.xml' path='docs/members[@name="SqlConnection"]/ServerCertificateValidationCallback/*' />
+        public ServerCertificateValidationCallback ServerCertificateValidationCallback { get { throw null; } set { } }
+        /// <include file='../../../../doc/snippets/Microsoft.Data.SqlClient/SqlConnection.xml' path='docs/members[@name="SqlConnection"]/ClientCertificateRetrievalCallback/*' />
+        public ClientCertificateRetrievalCallback ClientCertificateRetrievalCallback { get { throw null; } set { } }
+        /// <include file='../../../../doc/snippets/Microsoft.Data.SqlClient/SqlConnection.xml' path='docs/members[@name="SqlConnection"]/OriginalNetworkAddressInfo/*' />
+        public SqlClientOriginalNetworkAddressInfo OriginalNetworkAddressInfo { get { throw null; } set { } }
     }
+    /// <include file='../../../../doc/snippets/Microsoft.Data.SqlClient/SqlCertificateCallbacks.xml' path='docs/members[@name="SqlCertificateCallbacks"]/ServerCertificateValidationCallback/*'/>
+    public delegate bool ServerCertificateValidationCallback(System.Security.Cryptography.X509Certificates.X509Certificate2 certificate);
+    /// <include file='../../../../doc/snippets/Microsoft.Data.SqlClient/SqlCertificateCallbacks.xml' path='docs/members[@name="SqlCertificateCallbacks"]/ClientCertificateRetrievalCallback/*'/>
+    public delegate System.Security.Cryptography.X509Certificates.X509Certificate2 ClientCertificateRetrievalCallback();
+    /// <include file='../../../../doc/snippets/Microsoft.Data.SqlClient/SqlClientOriginalNetworkAddressInfo.xml' path='docs/members[@name="SqlClientOriginalNetworkAddressInfo"]/SqlClientOriginalNetworkAddressInfo/*' />
+    public sealed class SqlClientOriginalNetworkAddressInfo
+    {
+        /// <include file='../../../../doc/snippets/Microsoft.Data.SqlClient/SqlClientOriginalNetworkAddressInfo.xml' path='docs/members[@name="SqlClientOriginalNetworkAddressInfo"]/ctor/*' />
+        public SqlClientOriginalNetworkAddressInfo(System.Net.IPAddress address, bool isFromDataSecurityProxy = false, bool isVnetAddress = false) { }
+
+        /// <include file='../../../../doc/snippets/Microsoft.Data.SqlClient/SqlClientOriginalNetworkAddressInfo.xml' path='docs/members[@name="SqlClientOriginalNetworkAddressInfo"]/GetHashCode/*' />
+        public override int GetHashCode() { throw null; }
+
+        /// <include file='../../../../doc/snippets/Microsoft.Data.SqlClient/SqlClientOriginalNetworkAddressInfo.xml' path='docs/members[@name="SqlClientOriginalNetworkAddressInfo"]/Equals/*' />
+        public override bool Equals(object other) { throw null; }
+
+        /// <include file='../../../../doc/snippets/Microsoft.Data.SqlClient/SqlClientOriginalNetworkAddressInfo.xml' path='docs/members[@name="SqlClientOriginalNetworkAddressInfo"]/Address/*' />
+        public System.Net.IPAddress Address { get { throw null; } }
+
+        /// <include file='../../../../doc/snippets/Microsoft.Data.SqlClient/SqlClientOriginalNetworkAddressInfo.xml' path='docs/members[@name="SqlClientOriginalNetworkAddressInfo"]/IsFromDataSecurityProxy/*' />
+        public bool IsFromDataSecurityProxy { get { throw null; } }
+    }
+#else
+    }
+#endif
     /// <include file='../../../../doc/snippets/Microsoft.Data.SqlClient/SqlConnectionColumnEncryptionSetting.xml' path='docs/members[@name="SqlConnectionColumnEncryptionSetting"]/SqlConnectionColumnEncryptionSetting/*'/>
     public enum SqlConnectionColumnEncryptionSetting
     {
@@ -874,6 +908,10 @@ namespace Microsoft.Data.SqlClient
         [System.ComponentModel.DisplayNameAttribute("Authentication")]
         [System.ComponentModel.RefreshPropertiesAttribute(System.ComponentModel.RefreshProperties.All)]
         public Microsoft.Data.SqlClient.SqlAuthenticationMethod Authentication { get { throw null; } set { } }
+        /// <include file='../../../../doc/snippets/Microsoft.Data.SqlClient/SqlConnectionStringBuilder.xml' path='docs/members[@name="SqlConnectionStringBuilder"]/Certificate/*'/>
+        [System.ComponentModel.DisplayNameAttribute("Certificate")]
+        [System.ComponentModel.RefreshPropertiesAttribute(System.ComponentModel.RefreshProperties.All)]
+        public string Certificate { get { throw null; } set { } }
         /// <include file='../../../../doc/snippets/Microsoft.Data.SqlClient/SqlConnectionStringBuilder.xml' path='docs/members[@name="SqlConnectionStringBuilder"]/ColumnEncryptionSetting/*'/>
         [System.ComponentModel.DisplayNameAttribute("Column Encryption Setting")]
         [System.ComponentModel.RefreshPropertiesAttribute(System.ComponentModel.RefreshProperties.All)]

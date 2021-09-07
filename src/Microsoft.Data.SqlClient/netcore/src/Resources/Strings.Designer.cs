@@ -2410,6 +2410,15 @@ namespace System {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Incorrect authentication parameters specified with certificate authentication..
+        /// </summary>
+        internal static string SQL_Certificate {
+            get {
+                return ResourceManager.GetString("SQL_Certificate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The &apos;{0}&apos; argument must not be null or empty..
         /// </summary>
         internal static string SQL_ChangePasswordArgumentMissing {
@@ -2788,15 +2797,6 @@ namespace System {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot use &apos;Authentication={0}&apos; with &apos;Password&apos; or &apos;PWD&apos; connection string keywords..
-        /// </summary>
-        internal static string SQL_NonInteractiveWithPassword {
-            get {
-                return ResourceManager.GetString("SQL_NonInteractiveWithPassword", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The connection does not support MultipleActiveResultSets..
         /// </summary>
         internal static string SQL_MarsUnsupportedOnConnection {
@@ -2824,7 +2824,7 @@ namespace System {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error code 0x{0}..
+        ///   Looks up a localized string similar to Error code 0x{0}.
         /// </summary>
         internal static string SQL_MSALInnerException {
             get {
@@ -2856,6 +2856,15 @@ namespace System {
         internal static string SQL_NonCharColumn {
             get {
                 return ResourceManager.GetString("SQL_NonCharColumn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot use &apos;Authentication={0}&apos; with &apos;Password&apos; or &apos;PWD&apos; connection string keywords..
+        /// </summary>
+        internal static string SQL_NonInteractiveWithPassword {
+            get {
+                return ResourceManager.GetString("SQL_NonInteractiveWithPassword", resourceCulture);
             }
         }
         
@@ -4442,12 +4451,15 @@ namespace System {
                 return ResourceManager.GetString("TCE_DbConnectionString_AttestationProtocol", resourceCulture);
             }
         }
-
+        
         /// <summary>
-        ///   Looks up a localized string similar to Specifies an IP address preference when connecting to SQL instances.
+        ///   Looks up a localized string similar to Specifies an IP address preference when connecting to SQL instances..
         /// </summary>
-        internal static string TCE_DbConnectionString_IPAddressPreference
-            => ResourceManager.GetString("TCE_DbConnectionString_IPAddressPreference", resourceCulture);
+        internal static string TCE_DbConnectionString_IPAddressPreference {
+            get {
+                return ResourceManager.GetString("TCE_DbConnectionString_IPAddressPreference", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Decryption failed. The last 10 bytes of the encrypted column encryption key are: &apos;{0}&apos;. The first 10 bytes of ciphertext are: &apos;{1}&apos;..

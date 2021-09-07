@@ -372,7 +372,7 @@ namespace Microsoft.Data.SqlClient
                         case Keywords.ConnectionReset:
                             ConnectionReset = ConvertToBoolean(value);
                             break;
-                            // Obsolete ContextConnection
+                        // Obsolete ContextConnection
                         case Keywords.ContextConnection:
                             ContextConnection = ConvertToBoolean(value);
                             break;
@@ -788,14 +788,18 @@ namespace Microsoft.Data.SqlClient
         }
 
 #if ADONET_CERT_AUTH
+        /// <include file='..\..\..\..\..\..\..\doc\snippets\Microsoft.Data.SqlClient\SqlConnectionStringBuilder.xml' path='docs/members[@name="SqlConnectionStringBuilder"]/Certificate/*' />
         [DisplayName(DbConnectionStringKeywords.Certificate)]
         [ResCategoryAttribute(StringsHelper.ResourceNames.DataCategory_Security)]
         [ResDescriptionAttribute(StringsHelper.ResourceNames.DbConnectionString_Certificate)]
         [RefreshPropertiesAttribute(RefreshProperties.All)]
-        public string Certificate {
+        public string Certificate
+        {
             get { return _certificate; }
-            set {
-                if (!DbConnectionStringBuilderUtil.IsValidCertificateValue(value)) {
+            set
+            {
+                if (!DbConnectionStringBuilderUtil.IsValidCertificateValue(value))
+                {
                     throw ADP.InvalidConnectionOptionValue(DbConnectionStringKeywords.Certificate);
                 }
 
@@ -1282,7 +1286,7 @@ namespace Microsoft.Data.SqlClient
             switch (index)
             {
                 case Keywords.ApplicationIntent:
-                    return this.ApplicationIntent;
+                    return ApplicationIntent;
                 case Keywords.ApplicationName:
                     return ApplicationName;
                 case Keywords.AttachDBFilename:
@@ -1296,7 +1300,7 @@ namespace Microsoft.Data.SqlClient
 #pragma warning disable 618 // Obsolete ConnectionReset
                 case Keywords.ConnectionReset:
                     return ConnectionReset;
-                            // Obsolete ConnectionReset
+                // Obsolete ConnectionReset
                 case Keywords.ContextConnection:
                     return ContextConnection;
 #pragma warning restore 618
@@ -1447,11 +1451,6 @@ namespace Microsoft.Data.SqlClient
                 case Keywords.PoolBlockingPeriod:
                     _poolBlockingPeriod = DbConnectionStringDefaults.PoolBlockingPeriod;
                     break;
-#if ADONET_CERT_AUTH
-            case Keywords.Certificate:
-                _certificate = DbConnectionStringDefaults.Certificate;
-                break;
-#endif
                 case Keywords.ConnectTimeout:
                     _connectTimeout = DbConnectionStringDefaults.ConnectTimeout;
                     break;
@@ -1560,6 +1559,11 @@ namespace Microsoft.Data.SqlClient
                 case Keywords.IPAddressPreference:
                     _ipAddressPreference = DbConnectionStringDefaults.IPAddressPreference;
                     break;
+#if ADONET_CERT_AUTH
+                case Keywords.Certificate:
+                    _certificate = DbConnectionStringDefaults.Certificate;
+                    break;
+#endif
                 default:
                     Debug.Fail("unexpected keyword");
                     throw ADP.KeywordNotSupported(_validKeywords[(int)index]);

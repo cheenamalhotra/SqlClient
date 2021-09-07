@@ -518,6 +518,7 @@ namespace Microsoft.Data.Common
         }
 
         const string SqlPasswordString = "Sql Password";
+        internal const string SqlCertificateString = "Sql Certificate";
         const string ActiveDirectoryPasswordString = "Active Directory Password";
         const string ActiveDirectoryIntegratedString = "Active Directory Integrated";
         const string ActiveDirectoryInteractiveString = "Active Directory Interactive";
@@ -526,13 +527,13 @@ namespace Microsoft.Data.Common
         internal const string ActiveDirectoryManagedIdentityString = "Active Directory Managed Identity";
         internal const string ActiveDirectoryMSIString = "Active Directory MSI";
         internal const string ActiveDirectoryDefaultString = "Active Directory Default";
-        // const string SqlCertificateString = "Sql Certificate";
 
 #if DEBUG
         private static string[] s_supportedAuthenticationModes =
         {
             "NotSpecified",
             "SqlPassword",
+            "SqlCertificate",
             "ActiveDirectoryPassword",
             "ActiveDirectoryIntegrated",
             "ActiveDirectoryInteractive",
@@ -705,7 +706,7 @@ namespace Microsoft.Data.Common
 
         internal static bool IsValidAuthenticationTypeValue(SqlAuthenticationMethod value)
         {
-            Debug.Assert(Enum.GetNames(typeof(SqlAuthenticationMethod)).Length == 10, "SqlAuthenticationMethod enum has changed, update needed");
+            Debug.Assert(Enum.GetNames(typeof(SqlAuthenticationMethod)).Length == 11, "SqlAuthenticationMethod enum has changed, update needed");
             return value == SqlAuthenticationMethod.SqlPassword
                 || value == SqlAuthenticationMethod.ActiveDirectoryPassword
                 || value == SqlAuthenticationMethod.ActiveDirectoryIntegrated

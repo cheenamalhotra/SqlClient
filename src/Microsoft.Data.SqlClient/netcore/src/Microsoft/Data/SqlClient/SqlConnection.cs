@@ -62,7 +62,11 @@ namespace Microsoft.Data.SqlClient
         internal SessionData _recoverySessionData;
         internal bool _suppressStateChangeForReconnection;
         private int _reconnectCount;
-
+#if ADONET_CERT_AUTH
+        private ServerCertificateValidationCallback _serverCertificateValidationCallback;
+        private ClientCertificateRetrievalCallback _clientCertificateRetrievalCallback;
+        private SqlClientOriginalNetworkAddressInfo _originalNetworkAddressInfo;
+#endif
         // Retry Logic
         private SqlRetryLogicBaseProvider _retryLogicProvider;
 
@@ -520,6 +524,11 @@ namespace Microsoft.Data.SqlClient
             return opt != null && opt.Authentication == SqlAuthenticationMethod.ActiveDirectoryDefault;
         }
 
+        private bool UsesSqlCertificate(SqlConnectionString opt)
+        {
+            return opt != null ? opt.Authentication == SqlAuthenticationMethod.SqlCertificate : false;
+        }
+        
         private bool UsesAuthentication(SqlConnectionString opt)
         {
             return opt != null && opt.Authentication != SqlAuthenticationMethod.NotSpecified;
@@ -1008,7 +1017,7 @@ namespace Microsoft.Data.SqlClient
                 throw ADP.InvalidMixedUsageOfAccessTokenAndIntegratedSecurity();
             }
 
-            if (UsesAuthentication(connectionOptions))
+            if (UsesAuthentication(connectionOptions) && !UsesSqlCertificate(connectionOptions))
             {
                 throw ADP.InvalidMixedUsageOfAccessTokenAndAuthentication();
             }
@@ -1043,6 +1052,51 @@ namespace Microsoft.Data.SqlClient
             get => _fireInfoMessageEventOnUserErrors;
             set => _fireInfoMessageEventOnUserErrors = value;
         }
+
+#if ADONET_CERT_AUTH
+        /// <include file='..\..\..\..\..\..\..\doc\snippets\Microsoft.Data.SqlClient\SqlConnection.xml' path='docs/members[@name="SqlConnection"]/ServerCertificateValidationCallback/*' />
+        public ServerCertificateValidationCallback ServerCertificateValidationCallback
+        {
+            get
+            {
+                return _serverCertificateValidationCallback;
+            }
+            set
+            {
+                _serverCertificateValidationCallback = value;
+                ConnectionString_Set(new SqlConnectionPoolKey(_connectionString, _credential, _accessToken, _serverCertificateValidationCallback, _clientCertificateRetrievalCallback, _originalNetworkAddressInfo));
+            }
+        }
+
+        // The exceptions from client certificate callback are not rethrown and instead an SSL
+        // exchange fails with CRYPT_E_NOT_FOUND = 0x80092004
+        /// <include file='..\..\..\..\..\..\..\doc\snippets\Microsoft.Data.SqlClient\SqlConnection.xml' path='docs/members[@name="SqlConnection"]/ClientCertificateRetrievalCallback/*' />
+        public ClientCertificateRetrievalCallback ClientCertificateRetrievalCallback
+        {
+            get
+            {
+                return _clientCertificateRetrievalCallback;
+            }
+            set
+            {
+                _clientCertificateRetrievalCallback = value;
+                ConnectionString_Set(new SqlConnectionPoolKey(_connectionString, _credential, _accessToken, _serverCertificateValidationCallback, _clientCertificateRetrievalCallback, _originalNetworkAddressInfo));
+            }
+        }
+        /// <include file='..\..\..\..\..\..\..\doc\snippets\Microsoft.Data.SqlClient\SqlConnection.xml' path='docs/members[@name="SqlConnection"]/OriginalNetworkAddressInfo/*' />
+        public SqlClientOriginalNetworkAddressInfo OriginalNetworkAddressInfo
+        {
+            get
+            {
+                return _originalNetworkAddressInfo;
+            }
+            set
+            {
+                _originalNetworkAddressInfo = value;
+                ConnectionString_Set(new SqlConnectionPoolKey(_connectionString, _credential, _accessToken, _serverCertificateValidationCallback, _clientCertificateRetrievalCallback, _originalNetworkAddressInfo));
+            }
+        }
+#endif
 
         // Approx. number of times that the internal connection has been reconnected
         internal int ReconnectCount
