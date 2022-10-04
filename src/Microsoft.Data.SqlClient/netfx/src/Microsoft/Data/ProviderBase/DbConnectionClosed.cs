@@ -66,9 +66,9 @@ namespace Microsoft.Data.ProviderBase
             throw ADP.ClosedConnectionError();
         }
 
-        internal override bool TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource<DbConnectionInternal> retry, DbConnectionOptions userOptions)
+        internal override bool TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource<DbConnectionInternal> retry, DbConnectionOptions userOptions, bool isAsyncLogin)
         {
-            return base.TryOpenConnectionInternal(outerConnection, connectionFactory, retry, userOptions);
+            return base.TryOpenConnectionInternal(outerConnection, connectionFactory, retry, userOptions, isAsyncLogin);
         }
     }
 
@@ -79,7 +79,7 @@ namespace Microsoft.Data.ProviderBase
         {
         }
 
-        internal override bool TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource<DbConnectionInternal> retry, DbConnectionOptions userOptions)
+        internal override bool TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource<DbConnectionInternal> retry, DbConnectionOptions userOptions, bool isAsyncLogin)
         {
             throw ADP.ConnectionAlreadyOpen(State);
         }
@@ -120,12 +120,12 @@ namespace Microsoft.Data.ProviderBase
             connectionFactory.SetInnerConnectionTo(owningObject, DbConnectionClosedPreviouslyOpened.SingletonInstance);
         }
 
-        internal override bool TryReplaceConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource<DbConnectionInternal> retry, DbConnectionOptions userOptions)
+        internal override bool TryReplaceConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource<DbConnectionInternal> retry, DbConnectionOptions userOptions, bool isAsyncLogin)
         {
-            return TryOpenConnection(outerConnection, connectionFactory, retry, userOptions);
+            return TryOpenConnection(outerConnection, connectionFactory, retry, userOptions, isAsyncLogin);
         }
 
-        internal override bool TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource<DbConnectionInternal> retry, DbConnectionOptions userOptions)
+        internal override bool TryOpenConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource<DbConnectionInternal> retry, DbConnectionOptions userOptions, bool isAsyncLogin)
         {
 
             if (retry == null || !retry.Task.IsCompleted)
@@ -172,9 +172,9 @@ namespace Microsoft.Data.ProviderBase
         {
         }
 
-        internal override bool TryReplaceConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource<DbConnectionInternal> retry, DbConnectionOptions userOptions)
+        internal override bool TryReplaceConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource<DbConnectionInternal> retry, DbConnectionOptions userOptions, bool isAsyncLogin)
         {
-            return TryOpenConnection(outerConnection, connectionFactory, retry, userOptions);
+            return TryOpenConnection(outerConnection, connectionFactory, retry, userOptions, isAsyncLogin);
         }
     }
 }

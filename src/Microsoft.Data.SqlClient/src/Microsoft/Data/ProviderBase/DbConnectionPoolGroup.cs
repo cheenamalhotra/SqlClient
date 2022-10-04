@@ -144,7 +144,13 @@ namespace Microsoft.Data.ProviderBase
             return _poolCollection.Count;
         }
 
-        internal DbConnectionPool GetConnectionPool(DbConnectionFactory connectionFactory)
+        /// <summary>
+        /// Gets Connection pool using provided factory.
+        /// </summary>
+        /// <param name="connectionFactory">Connection Factory to create connection.</param>
+        /// <param name="isAsyncLogin">Whether or not should call external APIs asynchronously. True by default for .NET Core</param>
+        /// <returns></returns>
+        internal DbConnectionPool GetConnectionPool(DbConnectionFactory connectionFactory, bool isAsyncLogin = true)
         {
             // When this method returns null it indicates that the connection
             // factory should not use pooling.
@@ -187,8 +193,12 @@ namespace Microsoft.Data.ProviderBase
                             if (!_poolCollection.TryGetValue(currentIdentity, out pool))
                             {
                                 DbConnectionPoolProviderInfo connectionPoolProviderInfo = connectionFactory.CreateConnectionPoolProviderInfo(ConnectionOptions);
-                                DbConnectionPool newPool = new(connectionFactory, this, currentIdentity, connectionPoolProviderInfo);
-
+                                DbConnectionPool newPool =
+#if NETFRAMEWORK
+                                    new(connectionFactory, this, currentIdentity, connectionPoolProviderInfo, isAsyncLogin);
+#else
+                                    new(connectionFactory, this, currentIdentity, connectionPoolProviderInfo);
+#endif
                                 if (MarkPoolGroupAsActive())
                                 {
                                     // If we get here, we know for certain that we there isn't

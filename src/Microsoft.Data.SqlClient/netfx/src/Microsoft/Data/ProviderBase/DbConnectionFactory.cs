@@ -121,7 +121,7 @@ namespace Microsoft.Data.ProviderBase
             throw ADP.NotSupported();
         }
 
-        internal DbConnectionInternal CreateNonPooledConnection(DbConnection owningConnection, DbConnectionPoolGroup poolGroup, DbConnectionOptions userOptions)
+        internal DbConnectionInternal CreateNonPooledConnection(DbConnection owningConnection, DbConnectionPoolGroup poolGroup, DbConnectionOptions userOptions, bool isAsyncLogin)
         {
             Debug.Assert(null != owningConnection, "null owningConnection?");
             Debug.Assert(null != poolGroup, "null poolGroup?");
@@ -130,7 +130,7 @@ namespace Microsoft.Data.ProviderBase
             DbConnectionPoolGroupProviderInfo poolGroupProviderInfo = poolGroup.ProviderInfo;
             DbConnectionPoolKey poolKey = poolGroup.PoolKey;
 
-            DbConnectionInternal newConnection = CreateConnection(connectionOptions, poolKey, poolGroupProviderInfo, null, owningConnection, userOptions);
+            DbConnectionInternal newConnection = CreateConnection(connectionOptions, poolKey, poolGroupProviderInfo, null, owningConnection, userOptions, isAsyncLogin);
             if (null != newConnection)
             {
                 PerformanceCounters.HardConnectsPerSecond.Increment();
@@ -140,12 +140,12 @@ namespace Microsoft.Data.ProviderBase
             return newConnection;
         }
 
-        internal DbConnectionInternal CreatePooledConnection(DbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions)
+        internal DbConnectionInternal CreatePooledConnection(DbConnectionPool pool, DbConnection owningObject, DbConnectionOptions options, DbConnectionPoolKey poolKey, DbConnectionOptions userOptions, bool isAsyncLogin)
         {
             Debug.Assert(null != pool, "null pool?");
             DbConnectionPoolGroupProviderInfo poolGroupProviderInfo = pool.PoolGroup.ProviderInfo;
 
-            DbConnectionInternal newConnection = CreateConnection(options, poolKey, poolGroupProviderInfo, pool, owningObject, userOptions);
+            DbConnectionInternal newConnection = CreateConnection(options, poolKey, poolGroupProviderInfo, pool, owningObject, userOptions, isAsyncLogin);
 
             if (null != newConnection)
             {
@@ -194,7 +194,12 @@ namespace Microsoft.Data.ProviderBase
             return s_completedTask;
         }
 
-        internal bool TryGetConnection(DbConnection owningConnection, TaskCompletionSource<DbConnectionInternal> retry, DbConnectionOptions userOptions, DbConnectionInternal oldConnection, out DbConnectionInternal connection)
+        internal bool TryGetConnection(DbConnection owningConnection, 
+            TaskCompletionSource<DbConnectionInternal> retry, 
+            DbConnectionOptions userOptions, 
+            DbConnectionInternal oldConnection, 
+            bool isAsyncLogin,
+            out DbConnectionInternal connection)
         {
             Debug.Assert(null != owningConnection, "null owningConnection?");
 
@@ -219,7 +224,7 @@ namespace Microsoft.Data.ProviderBase
             {
                 poolGroup = GetConnectionPoolGroup(owningConnection);
                 // Doing this on the callers thread is important because it looks up the WindowsIdentity from the thread.
-                connectionPool = GetConnectionPool(owningConnection, poolGroup);
+                connectionPool = GetConnectionPool(owningConnection, poolGroup, isAsyncLogin);
                 if (null == connectionPool)
                 {
                     // If GetConnectionPool returns null, we can be certain that
@@ -267,7 +272,7 @@ namespace Microsoft.Data.ProviderBase
                                 try
                                 {
                                     ADP.SetCurrentTransaction(retry.Task.AsyncState as System.Transactions.Transaction);
-                                    var newConnection = CreateNonPooledConnection(owningConnection, poolGroup, userOptions);
+                                    var newConnection = CreateNonPooledConnection(owningConnection, poolGroup, userOptions, isAsyncLogin);
                                     if ((oldConnection != null) && (oldConnection.State == ConnectionState.Open))
                                     {
                                         oldConnection.PrepareForReplaceConnection();
@@ -324,7 +329,7 @@ namespace Microsoft.Data.ProviderBase
                         return false;
                     }
 
-                    connection = CreateNonPooledConnection(owningConnection, poolGroup, userOptions);
+                    connection = CreateNonPooledConnection(owningConnection, poolGroup, userOptions, isAsyncLogin);
                     PerformanceCounters.NumberOfNonPooledConnections.Increment();
                 }
                 else
@@ -332,11 +337,11 @@ namespace Microsoft.Data.ProviderBase
                     if (((SqlClient.SqlConnection)owningConnection).ForceNewConnection)
                     {
                         Debug.Assert(!(oldConnection is DbConnectionClosed), "Force new connection, but there is no old connection");
-                        connection = connectionPool.ReplaceConnection(owningConnection, userOptions, oldConnection);
+                        connection = connectionPool.ReplaceConnection(owningConnection, userOptions, oldConnection, isAsyncLogin);
                     }
                     else
                     {
-                        if (!connectionPool.TryGetConnection(owningConnection, retry, userOptions, out connection))
+                        if (!connectionPool.TryGetConnection(owningConnection, retry, userOptions, isAsyncLogin, out connection))
                         {
                             return false;
                         }
@@ -375,7 +380,7 @@ namespace Microsoft.Data.ProviderBase
             return true;
         }
 
-        private DbConnectionPool GetConnectionPool(DbConnection owningObject, DbConnectionPoolGroup connectionPoolGroup)
+        private DbConnectionPool GetConnectionPool(DbConnection owningObject, DbConnectionPoolGroup connectionPoolGroup, bool isAsyncLogin)
         {
             // if poolgroup is disabled, it will be replaced with a new entry
 
@@ -406,7 +411,7 @@ namespace Microsoft.Data.ProviderBase
                 Debug.Assert(null != connectionPoolGroup, "null connectionPoolGroup?");
                 SetConnectionPoolGroup(owningObject, connectionPoolGroup);
             }
-            DbConnectionPool connectionPool = connectionPoolGroup.GetConnectionPool(this);
+            DbConnectionPool connectionPool = connectionPoolGroup.GetConnectionPool(this, isAsyncLogin);
             return connectionPool;
         }
 
@@ -644,12 +649,12 @@ namespace Microsoft.Data.ProviderBase
             PerformanceCounters.NumberOfInactiveConnectionPoolGroups.Increment();
         }
 
-        virtual protected DbConnectionInternal CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+        virtual protected DbConnectionInternal CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions, bool isAsyncLogin)
         {
-            return CreateConnection(options, poolKey, poolGroupProviderInfo, pool, owningConnection);
+            return CreateConnection(options, poolKey, poolGroupProviderInfo, pool, owningConnection, isAsyncLogin);
         }
 
-        abstract protected DbConnectionInternal CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection);
+        abstract protected DbConnectionInternal CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, bool isAsyncLogin);
 
         abstract protected DbConnectionOptions CreateConnectionOptions(string connectionString, DbConnectionOptions previous);
 

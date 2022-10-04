@@ -1628,7 +1628,7 @@ namespace Microsoft.Data.SqlClient
         }
 
         private bool TryOpenWithRetry(TaskCompletionSource<DbConnectionInternal> retry, SqlConnectionOverrides overrides)
-            => RetryLogicProvider.Execute(this, () => TryOpen(retry, overrides));
+            => RetryLogicProvider.Execute(this, () => TryOpen(retry, isAsyncLogin: false, overrides));
 
         /// <include file='../../../../../../../doc/snippets/Microsoft.Data.SqlClient/SqlConnection.xml' path='docs/members[@name="SqlConnection"]/OpenWithOverrides/*' />
         public void Open(SqlConnectionOverrides overrides)
@@ -1655,7 +1655,7 @@ namespace Microsoft.Data.SqlClient
                 {
                     statistics = SqlStatistics.StartTimer(Statistics);
 
-                    if (!(IsProviderRetriable ? TryOpenWithRetry(null, overrides) : TryOpen(null, overrides)))
+                    if (!(IsProviderRetriable ? TryOpenWithRetry(null, overrides) : TryOpen(null, isAsyncLogin: false, overrides)))
                     {
                         throw ADP.InternalError(ADP.InternalErrorCode.SynchronousConnectReturnedPending);
                     }
@@ -1939,7 +1939,7 @@ namespace Microsoft.Data.SqlClient
 
                     try
                     {
-                        completed = TryOpen(completion);
+                        completed = TryOpen(completion, isAsyncLogin: true);
                     }
                     catch (Exception e)
                     {
@@ -2024,7 +2024,7 @@ namespace Microsoft.Data.SqlClient
                             // protect continuation from races with close and cancel
                             lock (_parent.InnerConnection)
                             {
-                                result = _parent.TryOpen(_retry);
+                                result = _parent.TryOpen(_retry, isAsyncLogin: true);
                             }
                             if (result)
                             {
@@ -2053,7 +2053,7 @@ namespace Microsoft.Data.SqlClient
             }
         }
 
-        private bool TryOpen(TaskCompletionSource<DbConnectionInternal> retry, SqlConnectionOverrides overrides = SqlConnectionOverrides.None)
+        private bool TryOpen(TaskCompletionSource<DbConnectionInternal> retry, bool isAsyncLogin, SqlConnectionOverrides overrides = SqlConnectionOverrides.None)
         {
             SqlConnectionString connectionOptions = (SqlConnectionString)ConnectionOptions;
 
@@ -2077,13 +2077,13 @@ namespace Microsoft.Data.SqlClient
                 {
                     if (_impersonateIdentity.User == identity.User)
                     {
-                        result = TryOpenInner(retry);
+                        result = TryOpenInner(retry, isAsyncLogin);
                     }
                     else
                     {
                         using (WindowsImpersonationContext context = _impersonateIdentity.Impersonate())
                         {
-                            result = TryOpenInner(retry);
+                            result = TryOpenInner(retry, isAsyncLogin);
                         }
                     }
                 }
@@ -2098,7 +2098,7 @@ namespace Microsoft.Data.SqlClient
                 {
                     _lastIdentity = null;
                 }
-                result = TryOpenInner(retry);
+                result = TryOpenInner(retry, isAsyncLogin);
             }
 
             // Set future transient fault handling based on connection options
@@ -2107,7 +2107,7 @@ namespace Microsoft.Data.SqlClient
             return result;
         }
 
-        private bool TryOpenInner(TaskCompletionSource<DbConnectionInternal> retry)
+        private bool TryOpenInner(TaskCompletionSource<DbConnectionInternal> retry, bool isAsyncLogin)
         {
             TdsParser bestEffortCleanupTarget = null;
             RuntimeHelpers.PrepareConstrainedRegions();
@@ -2125,14 +2125,14 @@ namespace Microsoft.Data.SqlClient
 #endif //DEBUG
                     if (ForceNewConnection)
                     {
-                        if (!InnerConnection.TryReplaceConnection(this, ConnectionFactory, retry, UserConnectionOptions))
+                        if (!InnerConnection.TryReplaceConnection(this, ConnectionFactory, retry, UserConnectionOptions, isAsyncLogin))
                         {
                             return false;
                         }
                     }
                     else
                     {
-                        if (!InnerConnection.TryOpenConnection(this, ConnectionFactory, retry, UserConnectionOptions))
+                        if (!InnerConnection.TryOpenConnection(this, ConnectionFactory, retry, UserConnectionOptions, isAsyncLogin))
                         {
                             return false;
                         }
@@ -2784,7 +2784,7 @@ namespace Microsoft.Data.SqlClient
             // Normally we would simply create a regular connectoin and open it but there is no other way to pass the
             // new password down to the constructor. Also it would have an unwanted impact on the connection pool
             //
-            using (SqlInternalConnectionTds con = new SqlInternalConnectionTds(null, connectionOptions, credential, null, newPassword, newSecurePassword, false, null, null, null, null))
+            using (SqlInternalConnectionTds con = new SqlInternalConnectionTds(null, connectionOptions, credential, null, newPassword, newSecurePassword, false, false, null, null, null, null))
             {
                 if (!con.Is2005OrNewer)
                 {

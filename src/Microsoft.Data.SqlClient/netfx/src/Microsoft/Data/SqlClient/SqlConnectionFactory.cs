@@ -32,12 +32,18 @@ namespace Microsoft.Data.SqlClient
             }
         }
 
-        override protected DbConnectionInternal CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection)
+        override protected DbConnectionInternal CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, bool isAsyncLogin)
         {
-            return CreateConnection(options, poolKey, poolGroupProviderInfo, pool, owningConnection, userOptions: null);
+            return CreateConnection(options, poolKey, poolGroupProviderInfo, pool, owningConnection, userOptions: null, isAsyncLogin: isAsyncLogin);
         }
 
-        override protected DbConnectionInternal CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+        override protected DbConnectionInternal CreateConnection(DbConnectionOptions options, 
+            DbConnectionPoolKey poolKey, 
+            object poolGroupProviderInfo, 
+            DbConnectionPool pool, 
+            DbConnection owningConnection, 
+            DbConnectionOptions userOptions,
+            bool isAsyncLogin)
         {
             SqlConnectionString opt = (SqlConnectionString)options;
             SqlConnectionPoolKey key = (SqlConnectionPoolKey)poolKey;
@@ -105,7 +111,7 @@ namespace Microsoft.Data.SqlClient
                             //       This first connection is established to SqlExpress to get the instance name 
                             //       of the UserInstance.
                             SqlConnectionString sseopt = new SqlConnectionString(opt, opt.DataSource, true /* user instance=true */, false /* set Enlist = false */);
-                            sseConnection = new SqlInternalConnectionTds(identity, sseopt, key.Credential, null, "", null, false, applyTransientFaultHandling: applyTransientFaultHandling);
+                            sseConnection = new SqlInternalConnectionTds(identity, sseopt, key.Credential, null, "", null, false, isAsyncLogin: isAsyncLogin, applyTransientFaultHandling: applyTransientFaultHandling);
                             // NOTE: Retrieve <UserInstanceName> here. This user instance name will be used below to connect to the Sql Express User Instance.
                             instanceName = sseConnection.InstanceName;
 
@@ -142,7 +148,7 @@ namespace Microsoft.Data.SqlClient
                     opt = new SqlConnectionString(opt, instanceName, false /* user instance=false */, null /* do not modify the Enlist value */);
                     poolGroupProviderInfo = null; // null so we do not pass to constructor below...
                 }
-                result = new SqlInternalConnectionTds(identity, opt, key.Credential, poolGroupProviderInfo, "", null, redirectedUserInstance, userOpt, recoverySessionData, key.ServerCertificateValidationCallback, key.ClientCertificateRetrievalCallback, pool, key.AccessToken, key.OriginalNetworkAddressInfo, applyTransientFaultHandling: applyTransientFaultHandling);
+                result = new SqlInternalConnectionTds(identity, opt, key.Credential, poolGroupProviderInfo, "", null, redirectedUserInstance, isAsyncLogin: isAsyncLogin, userOpt, recoverySessionData, key.ServerCertificateValidationCallback, key.ClientCertificateRetrievalCallback, pool, key.AccessToken, key.OriginalNetworkAddressInfo, applyTransientFaultHandling: applyTransientFaultHandling);
             }
             return result;
         }

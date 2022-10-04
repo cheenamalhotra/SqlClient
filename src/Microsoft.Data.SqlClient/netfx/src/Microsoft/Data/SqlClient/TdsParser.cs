@@ -2282,7 +2282,7 @@ namespace Microsoft.Data.SqlClient
             }
         }
 
-        internal bool Run(RunBehavior runBehavior, SqlCommand cmdHandler, SqlDataReader dataStream, BulkCopySimpleResultSet bulkCopyHandler, TdsParserStateObject stateObj)
+        internal bool Run(RunBehavior runBehavior, SqlCommand cmdHandler, SqlDataReader dataStream, BulkCopySimpleResultSet bulkCopyHandler, TdsParserStateObject stateObj, bool isAsyncLogin = true)
         {
             bool syncOverAsync = stateObj._syncOverAsync;
             try
@@ -2290,7 +2290,7 @@ namespace Microsoft.Data.SqlClient
                 stateObj._syncOverAsync = true;
 
                 bool dataReady;
-                bool result = TryRun(runBehavior, cmdHandler, dataStream, bulkCopyHandler, stateObj, out dataReady);
+                bool result = TryRun(runBehavior, cmdHandler, dataStream, bulkCopyHandler, stateObj, out dataReady, isAsyncLogin);
                 Debug.Assert(result == true, "Should never return false when _syncOverAsync is set");
                 return dataReady;
             }
@@ -2340,7 +2340,7 @@ namespace Microsoft.Data.SqlClient
         }
 
         // Main parse loop for the top-level tds tokens, calls back into the I*Handler interfaces
-        internal bool TryRun(RunBehavior runBehavior, SqlCommand cmdHandler, SqlDataReader dataStream, BulkCopySimpleResultSet bulkCopyHandler, TdsParserStateObject stateObj, out bool dataReady)
+        internal bool TryRun(RunBehavior runBehavior, SqlCommand cmdHandler, SqlDataReader dataStream, BulkCopySimpleResultSet bulkCopyHandler, TdsParserStateObject stateObj, out bool dataReady, bool isAsyncLogin = true)
         {
             ReliabilitySection.Assert("unreliable call to Run");  // you need to setup for a thread abort somewhere before you call this method
             Debug.Assert((SniContext.Undefined != stateObj.SniContext) &&       // SniContext must not be Undefined
@@ -2510,7 +2510,7 @@ namespace Microsoft.Data.SqlClient
                                 {
                                     return false;
                                 }
-                                if (!dataStream.TrySetMetaData(metaDataSet, false))
+                                if (!dataStream.TrySetMetaData(metaDataSet, moreInfo: false))
                                 {
                                     return false;
                                 }
@@ -2758,7 +2758,7 @@ namespace Microsoft.Data.SqlClient
                             {
                                 return false;
                             }
-                            _connHandler.OnFedAuthInfo(info);
+                            _connHandler.OnFedAuthInfo(info, isAsyncLogin);
                             break;
                         }
                     case TdsEnums.SQLSESSIONSTATE:
