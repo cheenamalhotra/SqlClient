@@ -425,6 +425,7 @@ namespace Microsoft.Data.SqlClient
                 string newPassword,
                 SecureString newSecurePassword,
                 bool redirectedUserInstance,
+                bool isAsyncLogin,
                 SqlConnectionString userConnectionOptions = null, // NOTE: userConnectionOptions may be different to connectionOptions if the connection string has been expanded (see SqlConnectionString.Expand)
                 SessionData reconnectSessionData = null,
                 ServerCertificateValidationCallback serverCallback = null,
@@ -536,7 +537,8 @@ namespace Microsoft.Data.SqlClient
                     {
                         try
                         {
-                            OpenLoginEnlist(_timeout, connectionOptions, credential, newPassword, newSecurePassword, redirectedUserInstance);
+                            OpenLoginEnlist(_timeout, connectionOptions, credential, newPassword, newSecurePassword, redirectedUserInstance,
+                                        isAsyncLogin: isAsyncLogin);
                             break;
                         }
                         catch (SqlException sqlex)
@@ -1442,9 +1444,9 @@ namespace Microsoft.Data.SqlClient
         // LOGIN-RELATED METHODS
         ////////////////////////////////////////////////////////////////////////////////////////
 
-        private void CompleteLogin(bool enlistOK)
+        private void CompleteLogin(bool enlistOK, bool isAsyncLogin)
         {
-            _parser.Run(RunBehavior.UntilDone, null, null, null, _parser._physicalStateObj);
+            _parser.Run(RunBehavior.UntilDone, null, null, null, _parser._physicalStateObj, isAsyncLogin);
 
             if (_routingInfo == null)
             {
@@ -1648,7 +1650,7 @@ namespace Microsoft.Data.SqlClient
         }
 
         private void OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential,
-                    string newPassword, SecureString newSecurePassword, bool redirectedUserInstance)
+                    string newPassword, SecureString newSecurePassword, bool redirectedUserInstance, bool isAsyncLogin)
         {
             bool useFailoverPartner; // should we use primary or secondary first
             ServerInfo dataSource = new ServerInfo(connectionOptions);
@@ -1686,13 +1688,14 @@ namespace Microsoft.Data.SqlClient
                                 redirectedUserInstance,
                                 connectionOptions,
                                 credential,
-                                timeout);
+                                timeout,
+                                isAsyncLogin);
                 }
                 else
                 {
                     timeoutErrorInternal.SetFailoverScenario(false); // not a failover scenario
                     LoginNoFailover(dataSource, newPassword, newSecurePassword, redirectedUserInstance,
-                            connectionOptions, credential, timeout);
+                            connectionOptions, credential, timeout, isAsyncLogin);
                 }
 
                 if (!IsAzureSQLConnection)
@@ -1752,7 +1755,7 @@ namespace Microsoft.Data.SqlClient
         //           Changes to either one should be examined to see if they need to be reflected in the other
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         private void LoginNoFailover(ServerInfo serverInfo, string newPassword, SecureString newSecurePassword, bool redirectedUserInstance,
-                    SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+                    SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout, bool isAsyncLogin)
         {
 
             Debug.Assert(object.ReferenceEquals(connectionOptions, this.ConnectionOptions), "ConnectionOptions argument and property must be the same"); // consider removing the argument
@@ -1854,6 +1857,7 @@ namespace Microsoft.Data.SqlClient
                                         newSecurePassword,
                                         !isParallel,    // ignore timeout for SniOpen call unless MSF , and TNIR
                                         attemptOneLoginTimeout,
+                                        isAsyncLogin: isAsyncLogin,
                                         isFirstTransparentAttempt: isFirstTransparentAttempt,
                                         disableTnir: disableTnir);
 
@@ -1948,7 +1952,8 @@ namespace Microsoft.Data.SqlClient
                                 redirectedUserInstance,
                                 connectionOptions,
                                 credential,
-                                timeout);
+                                timeout,
+                                isAsyncLogin: isAsyncLogin);
                     return; // LoginWithFailover successfully connected and handled entire connection setup
                 }
 
@@ -2036,7 +2041,8 @@ namespace Microsoft.Data.SqlClient
                 bool redirectedUserInstance,
                 SqlConnectionString connectionOptions,
                 SqlCredential credential,
-                TimeoutTimer timeout
+                TimeoutTimer timeout,
+                bool isAsyncLogin
             )
         {
 
@@ -2130,7 +2136,8 @@ namespace Microsoft.Data.SqlClient
                             newSecurePassword,
                             false,          // Use timeout in SniOpen
                             intervalTimer,
-                            withFailover: true
+                            withFailover: true,
+                            isAsyncLogin: isAsyncLogin
                             );
 
                     int routingAttempts = 0;
@@ -2168,7 +2175,8 @@ namespace Microsoft.Data.SqlClient
                                 newSecurePassword,
                                 false,          // Use timeout in SniOpen
                                 intervalTimer,
-                                withFailover: true
+                                withFailover: true,
+                                isAsyncLogin: isAsyncLogin
                                 );
                     }
 
@@ -2284,7 +2292,7 @@ namespace Microsoft.Data.SqlClient
         }
 
         // Common code path for making one attempt to establish a connection and log in to server.
-        private void AttemptOneLogin(ServerInfo serverInfo, string newPassword, SecureString newSecurePassword, bool ignoreSniOpenTimeout, TimeoutTimer timeout, bool withFailover = false, bool isFirstTransparentAttempt = true, bool disableTnir = false)
+        private void AttemptOneLogin(ServerInfo serverInfo, string newPassword, SecureString newSecurePassword, bool ignoreSniOpenTimeout, TimeoutTimer timeout, bool isAsyncLogin, bool withFailover = false, bool isFirstTransparentAttempt = true, bool disableTnir = false)
         {
             SqlClientEventSource.Log.TryAdvancedTraceEvent("<sc.SqlInternalConnectionTds.AttemptOneLogin|ADV> {0}, timout={1}[msec], server={2}", ObjectID, timeout.MillisecondsRemaining, serverInfo.ExtendedServerName);
 
@@ -2317,7 +2325,7 @@ namespace Microsoft.Data.SqlClient
             timeoutErrorInternal.EndPhase(SqlConnectionTimeoutErrorPhase.ProcessConnectionAuth);
             timeoutErrorInternal.SetAndBeginPhase(SqlConnectionTimeoutErrorPhase.PostLogin);
 
-            CompleteLogin(!ConnectionOptions.Pooling);
+            CompleteLogin(!ConnectionOptions.Pooling, isAsyncLogin);
 
             timeoutErrorInternal.EndPhase(SqlConnectionTimeoutErrorPhase.PostLogin);
         }
@@ -2564,7 +2572,8 @@ namespace Microsoft.Data.SqlClient
         /// Generates (if appropriate) and sends a Federated Authentication Access token to the server, using the Federated Authentication Info.
         /// </summary>
         /// <param name="fedAuthInfo">Federated Authentication Info.</param>
-        internal void OnFedAuthInfo(SqlFedAuthInfo fedAuthInfo)
+        /// <param name="isAsyncLogin">Whether or not to process external calls asynchronously.</param>
+        internal void OnFedAuthInfo(SqlFedAuthInfo fedAuthInfo, bool isAsyncLogin)
         {
             Debug.Assert((ConnectionOptions.HasUserIdKeyword && ConnectionOptions.HasPasswordKeyword)
                          || _credential != null
@@ -2622,7 +2631,7 @@ namespace Microsoft.Data.SqlClient
                     }
                     else if (_forceExpiryLocked)
                     {
-                        attemptRefreshTokenLocked = TryGetFedAuthTokenLocked(fedAuthInfo, dbConnectionPoolAuthenticationContext, out _fedAuthToken);
+                        attemptRefreshTokenLocked = TryGetFedAuthTokenLocked(fedAuthInfo, dbConnectionPoolAuthenticationContext, isAsyncLogin, out _fedAuthToken);
                     }
 #endif
 
@@ -2639,7 +2648,7 @@ namespace Microsoft.Data.SqlClient
 
                         // Call the function which tries to acquire a lock over the authentication context before trying to update.
                         // If the lock could not be obtained, it will return false, without attempting to fetch a new token.
-                        attemptRefreshTokenLocked = TryGetFedAuthTokenLocked(fedAuthInfo, dbConnectionPoolAuthenticationContext, out _fedAuthToken);
+                        attemptRefreshTokenLocked = TryGetFedAuthTokenLocked(fedAuthInfo, dbConnectionPoolAuthenticationContext, isAsyncLogin, out _fedAuthToken);
 
                         // If TryGetFedAuthTokenLocked returns true, it means lock was obtained and _fedAuthToken should not be null.
                         // If there was an exception in retrieving the new token, TryGetFedAuthTokenLocked should have thrown, so we won't be here.
@@ -2660,7 +2669,7 @@ namespace Microsoft.Data.SqlClient
             if (dbConnectionPoolAuthenticationContext == null || attemptRefreshTokenUnLocked)
             {
                 // Get the Federated Authentication Token.
-                _fedAuthToken = GetFedAuthToken(fedAuthInfo);
+                _fedAuthToken = GetFedAuthToken(fedAuthInfo, isAsyncLogin);
                 Debug.Assert(_fedAuthToken != null, "_fedAuthToken should not be null.");
 
                 if (_dbConnectionPool != null)
@@ -2692,9 +2701,10 @@ namespace Microsoft.Data.SqlClient
         /// </summary>
         /// <param name="fedAuthInfo">Federated Authentication Info</param>
         /// <param name="dbConnectionPoolAuthenticationContext">Authentication Context cached in the connection pool.</param>
+        /// <param name="isAsyncLogin">Whether or not to get token asynchronously.</param>
         /// <param name="fedAuthToken">Out parameter, carrying the token if we acquired a lock and got the token.</param>
         /// <returns></returns>
-        internal bool TryGetFedAuthTokenLocked(SqlFedAuthInfo fedAuthInfo, DbConnectionPoolAuthenticationContext dbConnectionPoolAuthenticationContext, out SqlFedAuthToken fedAuthToken)
+        internal bool TryGetFedAuthTokenLocked(SqlFedAuthInfo fedAuthInfo, DbConnectionPoolAuthenticationContext dbConnectionPoolAuthenticationContext, bool isAsyncLogin, out SqlFedAuthToken fedAuthToken)
         {
 
             Debug.Assert(fedAuthInfo != null, "fedAuthInfo should not be null.");
@@ -2729,7 +2739,7 @@ namespace Microsoft.Data.SqlClient
                 if (authenticationContextLocked)
                 {
                     // Get the Federated Authentication Token.
-                    fedAuthToken = GetFedAuthToken(fedAuthInfo);
+                    fedAuthToken = GetFedAuthToken(fedAuthInfo, isAsyncLogin);
                     Debug.Assert(fedAuthToken != null, "fedAuthToken should not be null.");
                 }
             }
@@ -2749,11 +2759,13 @@ namespace Microsoft.Data.SqlClient
         /// Get the Federated Authentication Token.
         /// </summary>
         /// <param name="fedAuthInfo">Information obtained from server as Federated Authentication Info.</param>
+        /// <param name="isAsyncLogin">Whether or not to fetch token asynchronously.</param>
         /// <returns>SqlFedAuthToken</returns>
-        internal SqlFedAuthToken GetFedAuthToken(SqlFedAuthInfo fedAuthInfo)
+        internal SqlFedAuthToken GetFedAuthToken(SqlFedAuthInfo fedAuthInfo, bool isAsyncLogin)
         {
-
             Debug.Assert(fedAuthInfo != null, "fedAuthInfo should not be null.");
+
+            SqlClientEventSource.Log.TryTraceEvent("<sc.SqlInternalConnectionTds.GetFedAuthToken> isAsyncLogin: {0}", isAsyncLogin);
 
             // No:of milliseconds to sleep for the inital back off.
             int sleepInterval = 100;
@@ -2798,7 +2810,8 @@ namespace Microsoft.Data.SqlClient
                             {
                                 // We use Task.Run here in all places to execute task synchronously in the same context.
                                 // Fixes block-over-async deadlock possibilities https://github.com/dotnet/SqlClient/issues/1209
-                                fedAuthToken = Task.Run(async () => await authProvider.AcquireTokenAsync(authParamsBuilder)).GetAwaiter().GetResult().ToSqlFedAuthToken();
+                                fedAuthToken = isAsyncLogin ? Task.Run(async () => await authProvider.AcquireTokenAsync(authParamsBuilder)).GetAwaiter().GetResult().ToSqlFedAuthToken()
+                                    : authProvider.AcquireTokenAsync(authParamsBuilder).Result.ToSqlFedAuthToken();
                                 _activeDirectoryAuthTimeoutRetryHelper.CachedToken = fedAuthToken;
                             }
                             break;
@@ -2814,7 +2827,8 @@ namespace Microsoft.Data.SqlClient
                             else
                             {
                                 authParamsBuilder.WithUserId(ConnectionOptions.UserID);
-                                fedAuthToken = Task.Run(async () => await authProvider.AcquireTokenAsync(authParamsBuilder)).GetAwaiter().GetResult().ToSqlFedAuthToken();
+                                fedAuthToken = isAsyncLogin ? Task.Run(async () => await authProvider.AcquireTokenAsync(authParamsBuilder)).GetAwaiter().GetResult().ToSqlFedAuthToken()
+                                    : authProvider.AcquireTokenAsync(authParamsBuilder).Result.ToSqlFedAuthToken();
                                 _activeDirectoryAuthTimeoutRetryHelper.CachedToken = fedAuthToken;
                             }
                             break;
@@ -2830,13 +2844,15 @@ namespace Microsoft.Data.SqlClient
                                 {
                                     username = _credential.UserId;
                                     authParamsBuilder.WithUserId(username).WithPassword(_credential.Password);
-                                    fedAuthToken = Task.Run(async () => await authProvider.AcquireTokenAsync(authParamsBuilder)).GetAwaiter().GetResult().ToSqlFedAuthToken();
+                                    fedAuthToken = isAsyncLogin ? Task.Run(async () => await authProvider.AcquireTokenAsync(authParamsBuilder)).GetAwaiter().GetResult().ToSqlFedAuthToken()
+                                        : authProvider.AcquireTokenAsync(authParamsBuilder).Result.ToSqlFedAuthToken();
                                 }
                                 else
                                 {
                                     username = ConnectionOptions.UserID;
                                     authParamsBuilder.WithUserId(username).WithPassword(ConnectionOptions.Password);
-                                    fedAuthToken = Task.Run(async () => await authProvider.AcquireTokenAsync(authParamsBuilder)).GetAwaiter().GetResult().ToSqlFedAuthToken();
+                                    fedAuthToken = isAsyncLogin ? Task.Run(async () => await authProvider.AcquireTokenAsync(authParamsBuilder)).GetAwaiter().GetResult().ToSqlFedAuthToken()
+                                        : authProvider.AcquireTokenAsync(authParamsBuilder).Result.ToSqlFedAuthToken();
                                 }
                                 _activeDirectoryAuthTimeoutRetryHelper.CachedToken = fedAuthToken;
                             }
@@ -3219,9 +3235,9 @@ namespace Microsoft.Data.SqlClient
             }
         }
 
-        internal override bool TryReplaceConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource<DbConnectionInternal> retry, DbConnectionOptions userOptions)
+        internal override bool TryReplaceConnection(DbConnection outerConnection, DbConnectionFactory connectionFactory, TaskCompletionSource<DbConnectionInternal> retry, DbConnectionOptions userOptions, bool isAsyncLogin)
         {
-            return base.TryOpenConnectionInternal(outerConnection, connectionFactory, retry, userOptions);
+            return base.TryOpenConnectionInternal(outerConnection, connectionFactory, retry, userOptions, isAsyncLogin);
         }
     }
 

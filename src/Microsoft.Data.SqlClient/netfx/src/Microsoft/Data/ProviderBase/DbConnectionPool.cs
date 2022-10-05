@@ -469,6 +469,7 @@ namespace Microsoft.Data.ProviderBase
         private Timer _errorTimer;
 
         private Timer _cleanupTimer;
+        private bool _isAsyncLogin;
 
         private readonly TransactedConnectionPool _transactedConnectionPool;
 
@@ -483,7 +484,8 @@ namespace Microsoft.Data.ProviderBase
                             DbConnectionFactory connectionFactory,
                             DbConnectionPoolGroup connectionPoolGroup,
                             DbConnectionPoolIdentity identity,
-                            DbConnectionPoolProviderInfo connectionPoolProviderInfo)
+                            DbConnectionPoolProviderInfo connectionPoolProviderInfo,
+                            bool isAsyncLogin)
         {
             Debug.Assert(ADP.IsWindowsNT, "Attempting to construct a connection pool on Win9x?");
             Debug.Assert(null != connectionPoolGroup, "null connectionPoolGroup");
@@ -505,6 +507,7 @@ namespace Microsoft.Data.ProviderBase
             _connectionPoolGroupOptions = connectionPoolGroup.PoolGroupOptions;
             _connectionPoolProviderInfo = connectionPoolProviderInfo;
             _identity = identity;
+            _isAsyncLogin = isAsyncLogin;
 
             _waitHandles = new PoolWaitHandles();
 
@@ -844,13 +847,13 @@ namespace Microsoft.Data.ProviderBase
             }
         }
 
-        private DbConnectionInternal CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+        private DbConnectionInternal CreateObject(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection, bool isAsyncLogin)
         {
             DbConnectionInternal newObj = null;
 
             try
             {
-                newObj = _connectionFactory.CreatePooledConnection(this, owningObject, _connectionPoolGroup.ConnectionOptions, _connectionPoolGroup.PoolKey, userOptions);
+                newObj = _connectionFactory.CreatePooledConnection(this, owningObject, _connectionPoolGroup.ConnectionOptions, _connectionPoolGroup.PoolKey, userOptions, isAsyncLogin);
                 if (null == newObj)
                 {
                     throw ADP.InternalError(ADP.InternalErrorCode.CreateObjectReturnedNull);    // CreateObject succeeded, but null object
@@ -1146,7 +1149,7 @@ namespace Microsoft.Data.ProviderBase
             return _resError;
         }
 
-        void WaitForPendingOpen()
+        void WaitForPendingOpen(bool isAsyncLogin)
         {
 
             Debug.Assert(!Thread.CurrentThread.IsThreadPoolThread, "This thread may block for a long time.  Threadpool threads should not be used.");
@@ -1213,7 +1216,7 @@ namespace Microsoft.Data.ProviderBase
                                 bool allowCreate = true;
                                 bool onlyOneCheckConnection = false;
                                 ADP.SetCurrentTransaction(next.Completion.Task.AsyncState as System.Transactions.Transaction);
-                                timeout = !TryGetConnection(next.Owner, delay, allowCreate, onlyOneCheckConnection, next.UserOptions, out connection);
+                                timeout = !TryGetConnection(next.Owner, delay, allowCreate, onlyOneCheckConnection, isAsyncLogin, next.UserOptions, out connection);
                             }
 #if DEBUG
                             finally
@@ -1275,7 +1278,7 @@ namespace Microsoft.Data.ProviderBase
             } while (_pendingOpens.TryPeek(out next));
         }
 
-        internal bool TryGetConnection(DbConnection owningObject, TaskCompletionSource<DbConnectionInternal> retry, DbConnectionOptions userOptions, out DbConnectionInternal connection)
+        internal bool TryGetConnection(DbConnection owningObject, TaskCompletionSource<DbConnectionInternal> retry, DbConnectionOptions userOptions, bool isAsyncLogin, out DbConnectionInternal connection)
         {
 
             uint waitForMultipleObjectsTimeout = 0;
@@ -1300,7 +1303,7 @@ namespace Microsoft.Data.ProviderBase
             }
 
             bool onlyOneCheckConnection = true;
-            if (TryGetConnection(owningObject, waitForMultipleObjectsTimeout, allowCreate, onlyOneCheckConnection, userOptions, out connection))
+            if (TryGetConnection(owningObject, waitForMultipleObjectsTimeout, allowCreate, onlyOneCheckConnection, isAsyncLogin, userOptions, out connection))
             {
                 return true;
             }
@@ -1321,7 +1324,7 @@ namespace Microsoft.Data.ProviderBase
             // it is better to StartNew too many times than not enough
             if (_pendingOpensWaiting == 0)
             {
-                Thread waitOpenThread = new Thread(WaitForPendingOpen);
+                Thread waitOpenThread = new Thread(() => WaitForPendingOpen(isAsyncLogin));
                 waitOpenThread.IsBackground = true;
                 waitOpenThread.Start();
             }
@@ -1333,7 +1336,7 @@ namespace Microsoft.Data.ProviderBase
         [SuppressMessage("Microsoft.Reliability", "CA2001:AvoidCallingProblematicMethods")] // copied from Triaged.cs
         [ResourceExposure(ResourceScope.None)] // SxS: this method does not expose resources
         [ResourceConsumption(ResourceScope.Machine, ResourceScope.Machine)]
-        private bool TryGetConnection(DbConnection owningObject, uint waitForMultipleObjectsTimeout, bool allowCreate, bool onlyOneCheckConnection, DbConnectionOptions userOptions, out DbConnectionInternal connection)
+        private bool TryGetConnection(DbConnection owningObject, uint waitForMultipleObjectsTimeout, bool allowCreate, bool onlyOneCheckConnection, bool isAsyncLogin, DbConnectionOptions userOptions, out DbConnectionInternal connection)
         {
             DbConnectionInternal obj = null;
             SysTx.Transaction transaction = null;
@@ -1408,7 +1411,7 @@ namespace Microsoft.Data.ProviderBase
                                 SqlClientEventSource.Log.TryPoolerTraceEvent("<prov.DbConnectionPool.GetConnection|RES|CPOOL> {0}, Creating new connection.", ObjectID);
                                 try
                                 {
-                                    obj = UserCreateRequest(owningObject, userOptions);
+                                    obj = UserCreateRequest(owningObject, userOptions, isAsyncLogin);
                                 }
                                 catch
                                 {
@@ -1470,7 +1473,7 @@ namespace Microsoft.Data.ProviderBase
                                             try
                                             {
                                                 SqlClientEventSource.Log.TryPoolerTraceEvent("<prov.DbConnectionPool.GetConnection|RES|CPOOL> {0}, Creating new connection.", ObjectID);
-                                                obj = UserCreateRequest(owningObject, userOptions);
+                                                obj = UserCreateRequest(owningObject, userOptions, isAsyncLogin);
                                             }
                                             finally
                                             {
@@ -1579,12 +1582,13 @@ namespace Microsoft.Data.ProviderBase
         /// <param name="owningObject">Outer connection that currently owns <paramref name="oldConnection"/></param>
         /// <param name="userOptions">Options used to create the new connection</param>
         /// <param name="oldConnection">Inner connection that will be replaced</param>
+        /// <param name="isAsyncLogin">Whether or not to call external APIs asynchronously.</param>
         /// <returns>A new inner connection that is attached to the <paramref name="owningObject"/></returns>
-        internal DbConnectionInternal ReplaceConnection(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection)
+        internal DbConnectionInternal ReplaceConnection(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection, bool isAsyncLogin)
         {
             PerformanceCounters.SoftConnectsPerSecond.Increment();
             SqlClientEventSource.Log.TryPoolerTraceEvent("<prov.DbConnectionPool.ReplaceConnection|RES|CPOOL> {0}, replacing connection.", ObjectID);
-            DbConnectionInternal newConnection = UserCreateRequest(owningObject, userOptions, oldConnection);
+            DbConnectionInternal newConnection = UserCreateRequest(owningObject, userOptions, isAsyncLogin, oldConnection);
 
             if (newConnection != null)
             {
@@ -1685,7 +1689,7 @@ namespace Microsoft.Data.ProviderBase
                     // start it back up again
                     if (!_pendingOpens.IsEmpty && _pendingOpensWaiting == 0)
                     {
-                        Thread waitOpenThread = new Thread(WaitForPendingOpen);
+                        Thread waitOpenThread = new Thread(() => WaitForPendingOpen(_isAsyncLogin));
                         waitOpenThread.IsBackground = true;
                         waitOpenThread.Start();
                     }
@@ -1736,7 +1740,7 @@ namespace Microsoft.Data.ProviderBase
                                         while (NeedToReplenish)
                                         {
                                             // Don't specify any user options because there is no outer connection associated with the new connection
-                                            newObj = CreateObject(owningObject: null, userOptions: null, oldConnection: null);
+                                            newObj = CreateObject(owningObject: null, userOptions: null, oldConnection: null, isAsyncLogin: _isAsyncLogin);
 
                                             // We do not need to check error flag here, since we know if
                                             // CreateObject returned null, we are in error case.
@@ -1992,7 +1996,7 @@ namespace Microsoft.Data.ProviderBase
             }
         }
 
-        private DbConnectionInternal UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, DbConnectionInternal oldConnection = null)
+        private DbConnectionInternal UserCreateRequest(DbConnection owningObject, DbConnectionOptions userOptions, bool isAsyncLogin, DbConnectionInternal oldConnection = null)
         {
             // called by user when they were not able to obtain a free object but
             // instead obtained creation mutex
@@ -2011,7 +2015,7 @@ namespace Microsoft.Data.ProviderBase
 
                     // TODO: Consider implement a control knob here; why do we only check for dead objects ever other time?  why not every 10th time or every time?
                     if ((oldConnection != null) || (Count & 0x1) == 0x1 || !ReclaimEmancipatedObjects())
-                        obj = CreateObject(owningObject, userOptions, oldConnection);
+                        obj = CreateObject(owningObject, userOptions, oldConnection, isAsyncLogin);
                 }
                 return obj;
             }

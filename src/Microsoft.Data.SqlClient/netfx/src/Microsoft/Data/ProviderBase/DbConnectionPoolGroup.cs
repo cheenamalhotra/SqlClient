@@ -177,7 +177,7 @@ namespace Microsoft.Data.ProviderBase
             return _poolCollection.Count;
         }
 
-        internal DbConnectionPool GetConnectionPool(DbConnectionFactory connectionFactory)
+        internal DbConnectionPool GetConnectionPool(DbConnectionFactory connectionFactory, bool isAsyncLogin)
         {
             // When this method returns null it indicates that the connection
             // factory should not use pooling.
@@ -220,7 +220,7 @@ namespace Microsoft.Data.ProviderBase
                             if (!_poolCollection.TryGetValue(currentIdentity, out pool))
                             {
                                 DbConnectionPoolProviderInfo connectionPoolProviderInfo = connectionFactory.CreateConnectionPoolProviderInfo(this.ConnectionOptions);
-                                DbConnectionPool newPool = new DbConnectionPool(connectionFactory, this, currentIdentity, connectionPoolProviderInfo);
+                                DbConnectionPool newPool = new DbConnectionPool(connectionFactory, this, currentIdentity, connectionPoolProviderInfo, isAsyncLogin);
 
                                 if (MarkPoolGroupAsActive())
                                 {
