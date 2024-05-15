@@ -1920,7 +1920,7 @@ namespace Microsoft.Data.SqlClient
             return MetaType.GetDefaultMetaType();
         }
 
-        internal void Prepare(SqlCommand cmd)
+        internal void Prepare(DbCommand cmd)
         {
             if (_metaType == null)
             {

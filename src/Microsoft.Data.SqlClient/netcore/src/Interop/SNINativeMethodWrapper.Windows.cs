@@ -379,7 +379,7 @@ namespace Microsoft.Data.SqlClient
             return SNIInitialize(IntPtr.Zero);
         }
 
-        internal static unsafe uint SNIOpenMarsSession(ConsumerInfo consumerInfo, SNIHandle parent, ref IntPtr pConn, bool fSync, SqlConnectionIPAddressPreference ipPreference, SQLDNSInfo cachedDNSInfo)
+        internal static unsafe uint SNIOpenMarsSession(ConsumerInfo consumerInfo, SNIHandle parent, ref IntPtr pConn, bool fSync, SqlConnectionIPAddressPreference ipPreference, SqlDnsInfo cachedDNSInfo)
         {
             // initialize consumer info for MARS
             Sni_Consumer_Info native_consumerInfo = new Sni_Consumer_Info();
@@ -405,7 +405,7 @@ namespace Microsoft.Data.SqlClient
             int timeout,
             bool fParallel,
             SqlConnectionIPAddressPreference ipPreference,
-            SQLDNSInfo cachedDNSInfo,
+            SqlDnsInfo cachedDNSInfo,
             string hostNameInCertificate)
         {
 

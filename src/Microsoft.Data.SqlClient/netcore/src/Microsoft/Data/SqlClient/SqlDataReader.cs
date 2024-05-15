@@ -743,7 +743,7 @@ namespace Microsoft.Data.SqlClient
             return schemaTable;
         }
 
-        internal void Cancel(SqlCommand command)
+        internal void Cancel(DbCommand command)
         {
             Debug.Assert(command == _command, "Calling command from an object that isn't this reader's command");
             TdsParserStateObject stateObj = _stateObj;

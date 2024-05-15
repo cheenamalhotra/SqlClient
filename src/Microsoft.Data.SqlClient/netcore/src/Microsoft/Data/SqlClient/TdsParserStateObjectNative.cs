@@ -65,13 +65,13 @@ namespace Microsoft.Data.SqlClient
             TdsParserStateObjectNative nativeSNIObject = physicalConnection as TdsParserStateObjectNative;
             SNINativeMethodWrapper.ConsumerInfo myInfo = CreateConsumerInfo(async);
 
-            SQLDNSInfo cachedDNSInfo;
+            SqlDnsInfo cachedDNSInfo;
             bool ret = SQLFallbackDNSCache.Instance.GetDNSInfo(_parser.FQDNforDNSCache, out cachedDNSInfo);
 
             _sessionHandle = new SNIHandle(myInfo, nativeSNIObject.Handle, _parser.Connection.ConnectionOptions.IPAddressPreference, cachedDNSInfo);
         }
 
-        internal override void AssignPendingDNSInfo(string userProtocol, string DNSCacheKey, ref SQLDNSInfo pendingDNSInfo)
+        internal override void AssignPendingDNSInfo(string userProtocol, string DNSCacheKey, ref SqlDnsInfo pendingDNSInfo)
         {
             uint result;
             ushort portFromSNI = 0;
@@ -101,7 +101,7 @@ namespace Microsoft.Data.SqlClient
                 result = SNINativeMethodWrapper.SniGetConnectionIPString(Handle, ref IPStringFromSNI);
                 Debug.Assert(result == TdsEnums.SNI_SUCCESS, "Unexpected failure state upon calling SniGetConnectionIPString");
 
-                pendingDNSInfo = new SQLDNSInfo(DNSCacheKey, null, null, portFromSNI.ToString());
+                pendingDNSInfo = new SqlDnsInfo(DNSCacheKey, null, null, portFromSNI.ToString());
 
                 if (IPAddress.TryParse(IPStringFromSNI, out IPFromSNI))
                 {
@@ -149,7 +149,7 @@ namespace Microsoft.Data.SqlClient
             bool fParallel,
             SqlConnectionIPAddressPreference ipPreference,
             string cachedFQDN,
-            ref SQLDNSInfo pendingDNSInfo,
+            ref SqlDnsInfo pendingDNSInfo,
             string serverSPN,
             bool isIntegratedSecurity,
             bool tlsFirst,
@@ -176,7 +176,7 @@ namespace Microsoft.Data.SqlClient
             }
 
             SNINativeMethodWrapper.ConsumerInfo myInfo = CreateConsumerInfo(async);
-            SQLDNSInfo cachedDNSInfo;
+            SqlDnsInfo cachedDNSInfo;
             bool ret = SQLFallbackDNSCache.Instance.GetDNSInfo(cachedFQDN, out cachedDNSInfo);
 
             _sessionHandle = new SNIHandle(myInfo, serverName, spnBuffer[0], timeout.MillisecondsRemainingInt, out instanceName,

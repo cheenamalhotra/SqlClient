@@ -919,6 +919,64 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Strings.resx</DependentUpon>
     </Compile>
+    <Compile Include="Microsoft\Data\SqlClientX\Internal\Connection\DbConnectionOptions.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Internal\Connection\DbConnectionString.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Internal\Connection\DbConnectionManager.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Internal\Connection\SqlConnectionString.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Internal\Connection\SqlConnectionTimeoutError.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Internal\Connection\SqlConnnSessionData.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Internal\Connection\SqlInternalConnection.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Internal\SqlUtil.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Logging\ILogger.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Logging\SqlDiagnosticListener.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Logging\SqlDiagnosticListenerExtensions.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\Security\NegotiateSspiContextProvider.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\Security\SspiClientContextStatus.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\Security\SspiContextProvider.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\Security\SspiUtil.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\Security\SspiClientContextProvider.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\SqlCommand.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\SqlConnection.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\TDS\Handlers\BufferHandler.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\TDS\Handlers\DataParser.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\TDS\Handlers\IBufferHandler.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\TDS\Handlers\IDataSerializer.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\TDS\Handlers\IErrorHandler.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\TDS\Handlers\INetworkHandler.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\TDS\Handlers\IStateHandler.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\TDS\Handlers\IBufferTypesHandler.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\TDS\Handlers\ITimeoutHandler.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\TDS\Helpers\TdsStreamReader.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\TDS\LoginHandler.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\TDS\Handlers\NetworkHandler.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\TDS\Handlers\StateHandler.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\TDS\Handlers\BufferTypesHandler.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\Helpers\Common.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Internal\Connection\SqlConnectionStateInfo.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\TDS\TDSExecutor.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\Types\ConcurrentQueueSemaphore.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\Helpers\Constants.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\TDS\Helpers\Utils.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\TDS\CommandExecutor.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\TDS\Types\NetworkResult.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\Types\Providers.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\Types\SmuxFlags.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\NpMessenger.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\Types\SmuxHeader.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\Types\SqlNetworkError.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\Helpers\NetworkUtil.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\Types\Message.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\Types\MessengerParameters.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\GlobalErrorHandler.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\Messenger.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\Types\MessengerResponse.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\TcpMessenger.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\Types\SqlDataSource.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\Types\Packet.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\Streams\SqlNetworkStream.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\Streams\SqlSslStream.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Net\Streams\SslOverTdsStream.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\TDS\Types\TDSParserState.cs" />
     <EmbeddedResource Include="$(CommonSourceRoot)Resources\Strings.resx">
       <Link>Resources\Strings.resx</Link>
       <LogicalName>Microsoft.Data.SqlClient.Resources.Strings.resources</LogicalName>
@@ -948,6 +1006,9 @@
     <PackageReference Include="Microsoft.Identity.Client" Version="$(MicrosoftIdentityClientVersion)" />
     <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="$(MicrosoftIdentityModelProtocolsOpenIdConnectVersion)" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="$(MicrosoftIdentityModelJsonWebTokensVersion)" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Microsoft\Data\SqlClientX\TDS\State\" />
   </ItemGroup>
   <Import Project="$(ToolsDir)targets\GenerateThisAssemblyCs.targets" />
   <Import Project="$(ToolsDir)targets\ResolveContract.targets" Condition="'$(OSGroup)' == 'AnyOS'" />

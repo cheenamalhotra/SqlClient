@@ -134,7 +134,7 @@ namespace Microsoft.Data.SqlClient.SNI
             bool parallel,
             SqlConnectionIPAddressPreference ipPreference,
             string cachedFQDN,
-            ref SQLDNSInfo pendingDNSInfo,
+            ref SqlDnsInfo pendingDNSInfo,
             bool tlsFirst,
             string hostNameInCertificate,
             string serverCertificateFilename)
@@ -149,7 +149,7 @@ namespace Microsoft.Data.SqlClient.SNI
                 _serverCertificateFilename = serverCertificateFilename;
                 _sendSync = new object();
 
-                SQLDNSInfo cachedDNSInfo;
+                SqlDnsInfo cachedDNSInfo;
                 bool hasCachedDNSInfo = SQLFallbackDNSCache.Instance.GetDNSInfo(cachedFQDN, out cachedDNSInfo);
 
                 try
@@ -298,7 +298,7 @@ namespace Microsoft.Data.SqlClient.SNI
         // Connect to server with hostName and port in parellel mode.
         // The IP information will be collected temporarily as the pendingDNSInfo but is not stored in the DNS cache at this point.
         // Only write to the DNS cache when we receive IsSupported flag as true in the Feature Ext Ack from server.
-        private Socket TryConnectParallel(string hostName, int port, TimeoutTimer timeout, ref bool callerReportError, string cachedFQDN, ref SQLDNSInfo pendingDNSInfo)
+        private Socket TryConnectParallel(string hostName, int port, TimeoutTimer timeout, ref bool callerReportError, string cachedFQDN, ref SqlDnsInfo pendingDNSInfo)
         {
             Socket availableSocket = null;
             Task<Socket> connectTask;
@@ -334,7 +334,7 @@ namespace Microsoft.Data.SqlClient.SNI
 
             if (IPv4String != null || IPv6String != null)
             {
-                pendingDNSInfo = new SQLDNSInfo(cachedFQDN, IPv4String, IPv6String, port.ToString());
+                pendingDNSInfo = new SqlDnsInfo(cachedFQDN, IPv4String, IPv6String, port.ToString());
             }
 
             connectTask = ParallelConnectAsync(serverAddresses, port);
@@ -394,7 +394,7 @@ namespace Microsoft.Data.SqlClient.SNI
         // Connect to server with hostName and port.
         // The IP information will be collected temporarily as the pendingDNSInfo but is not stored in the DNS cache at this point.
         // Only write to the DNS cache when we receive IsSupported flag as true in the Feature Ext Ack from server.
-        private static Socket Connect(string serverName, int port, TimeoutTimer timeout, SqlConnectionIPAddressPreference ipPreference, string cachedFQDN, ref SQLDNSInfo pendingDNSInfo)
+        private static Socket Connect(string serverName, int port, TimeoutTimer timeout, SqlConnectionIPAddressPreference ipPreference, string cachedFQDN, ref SqlDnsInfo pendingDNSInfo)
         {
             SqlClientEventSource.Log.TrySNITraceEvent(nameof(SNITCPHandle), EventType.INFO, "IP preference : {0}", Enum.GetName(typeof(SqlConnectionIPAddressPreference), ipPreference));
             bool isInfiniteTimeout = timeout.IsInfinite;
@@ -504,7 +504,7 @@ namespace Microsoft.Data.SqlClient.SNI
                         {
                             iPv6String = ipAddress.ToString();
                         }
-                        pendingDNSInfo = new SQLDNSInfo(cachedFQDN, iPv4String, iPv6String, port.ToString());
+                        pendingDNSInfo = new SqlDnsInfo(cachedFQDN, iPv4String, iPv6String, port.ToString());
                         isSocketSelected = true;
                         return socket;
                     }
@@ -655,7 +655,7 @@ namespace Microsoft.Data.SqlClient.SNI
                 catch (AuthenticationException aue)
                 {
                     SqlClientEventSource.Log.TrySNITraceEvent(nameof(SNITCPHandle), EventType.ERR, "Connection Id {0}, Authentication exception occurred: {1}", args0: _connectionId, args1: aue?.Message);
-                    return ReportTcpSNIError(aue, SNIError.CertificateValidationErrorCode);
+                    return ReportTcpSNIError(aue, SNICommon.CertificateValidationErrorCode);
                 }
                 catch (InvalidOperationException ioe)
                 {

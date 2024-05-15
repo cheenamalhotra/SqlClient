@@ -11,7 +11,7 @@ namespace Microsoft.Data.SqlClient
     {
         private static readonly SQLFallbackDNSCache _SQLFallbackDNSCache = new SQLFallbackDNSCache();
         private static readonly int initialCapacity = 101;   // give some prime number here according to MSDN docs. It will be resized if reached capacity. 
-        private ConcurrentDictionary<string, SQLDNSInfo> DNSInfoCache;
+        private ConcurrentDictionary<string, SqlDnsInfo> DNSInfoCache;
 
         // singleton instance
         public static SQLFallbackDNSCache Instance { get { return _SQLFallbackDNSCache; } }
@@ -19,12 +19,12 @@ namespace Microsoft.Data.SqlClient
         private SQLFallbackDNSCache()
         {
             int level = 4 * Environment.ProcessorCount;
-            DNSInfoCache = new ConcurrentDictionary<string, SQLDNSInfo>(concurrencyLevel: level,
+            DNSInfoCache = new ConcurrentDictionary<string, SqlDnsInfo>(concurrencyLevel: level,
                                                                             capacity: initialCapacity,
                                                                             comparer: StringComparer.OrdinalIgnoreCase);
         }
 
-        internal bool AddDNSInfo(SQLDNSInfo item)
+        internal bool AddDNSInfo(SqlDnsInfo item)
         {
             if (null != item)
             {
@@ -42,20 +42,20 @@ namespace Microsoft.Data.SqlClient
 
         internal bool DeleteDNSInfo(string FQDN)
         {
-            SQLDNSInfo value;
+            SqlDnsInfo value;
             return DNSInfoCache.TryRemove(FQDN, out value);
         }
 
-        internal bool GetDNSInfo(string FQDN, out SQLDNSInfo result)
+        internal bool GetDNSInfo(string FQDN, out SqlDnsInfo result)
         {
             return DNSInfoCache.TryGetValue(FQDN, out result);
         }
 
-        internal bool IsDuplicate(SQLDNSInfo newItem)
+        internal bool IsDuplicate(SqlDnsInfo newItem)
         {
             if (null != newItem)
             {
-                SQLDNSInfo oldItem;
+                SqlDnsInfo oldItem;
                 if (GetDNSInfo(newItem.FQDN, out oldItem))
                 {
                     return (newItem.AddrIPv4 == oldItem.AddrIPv4 &&
@@ -68,14 +68,14 @@ namespace Microsoft.Data.SqlClient
         }
     }
 
-    internal sealed class SQLDNSInfo
+    internal sealed class SqlDnsInfo
     {
         public string FQDN { get; set; }
         public string AddrIPv4 { get; set; }
         public string AddrIPv6 { get; set; }
         public string Port { get; set; }
 
-        internal SQLDNSInfo(string FQDN, string ipv4, string ipv6, string port)
+        internal SqlDnsInfo(string FQDN, string ipv4, string ipv6, string port)
         {
             this.FQDN = FQDN;
             AddrIPv4 = ipv4;

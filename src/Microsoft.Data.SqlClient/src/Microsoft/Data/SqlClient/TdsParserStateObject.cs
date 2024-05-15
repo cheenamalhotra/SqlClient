@@ -24,6 +24,7 @@ namespace Microsoft.Data.SqlClient
         internal long _value;
     }
 
+    // 1:1 with SqlCommand
     partial class TdsParserStateObject
     {
         private static int s_objectTypeCount; // EventSource counter
@@ -72,41 +73,41 @@ namespace Microsoft.Data.SqlClient
         private int _activateCount;                     // 0 when we're in the pool, 1 when we're not, all others are an error
         private SnapshottedStateFlags _snapshottedState;
 
-        // Two buffers exist in tdsparser, an in buffer and an out buffer.  For the out buffer, only
-        // one bookkeeping variable is needed, the number of bytes used in the buffer.  For the in buffer,
-        // three variables are actually needed.  First, we need to record from the netlib how many bytes it
-        // read from the netlib, this variable is _inBytesRead.  Then, we need to also keep track of how many
-        // bytes we have used as we consume the bytes from the buffer, that variable is _inBytesUsed.  Third,
-        // we need to keep track of how many bytes are left in the packet, so that we know when we have reached
-        // the end of the packet and so we need to consume the next header.  That variable is _inBytesPacket.
+        //// Two buffers exist in tdsparser, an in buffer and an out buffer.  For the out buffer, only
+        //// one bookkeeping variable is needed, the number of bytes used in the buffer.  For the in buffer,
+        //// three variables are actually needed.  First, we need to record from the netlib how many bytes it
+        //// read from the netlib, this variable is _inBytesRead.  Then, we need to also keep track of how many
+        //// bytes we have used as we consume the bytes from the buffer, that variable is _inBytesUsed.  Third,
+        //// we need to keep track of how many bytes are left in the packet, so that we know when we have reached
+        //// the end of the packet and so we need to consume the next header.  That variable is _inBytesPacket.
 
-        // Header length constants
-        internal readonly int _inputHeaderLen = TdsEnums.HEADER_LEN;
-        internal readonly int _outputHeaderLen = TdsEnums.HEADER_LEN;
+        //// Header length constants
+        //internal readonly int _inputHeaderLen = TdsEnums.HEADER_LEN;
+        //internal readonly int _outputHeaderLen = TdsEnums.HEADER_LEN;
 
-        // Out buffer variables
-        internal byte[] _outBuff;                         // internal write buffer - initialize on login
-        internal int _outBytesUsed = TdsEnums.HEADER_LEN; // number of bytes used in internal write buffer - initialize past header
+        //// Out buffer variables
+        //internal byte[] _outBuff;                         // internal write buffer - initialize on login
+        //internal int _outBytesUsed = TdsEnums.HEADER_LEN; // number of bytes used in internal write buffer - initialize past header
 
-        // In buffer variables
+        //// In buffer variables
 
-        /// <summary>
-        /// internal read buffer - initialize on login
-        /// </summary>
-        protected byte[] _inBuff;
-        /// <summary>
-        /// number of bytes used in internal read buffer
-        /// </summary>
-        internal int _inBytesUsed;
-        /// <summary>
-        /// number of bytes read into internal read buffer
-        /// </summary>
-        internal int _inBytesRead;
+        ///// <summary>
+        ///// internal read buffer - initialize on login
+        ///// </summary>
+        //protected byte[] _inBuff;
+        ///// <summary>
+        ///// number of bytes used in internal read buffer
+        ///// </summary>
+        //internal int _inBytesUsed;
+        ///// <summary>
+        ///// number of bytes read into internal read buffer
+        ///// </summary>
+        //internal int _inBytesRead;
 
-        /// <summary>
-        /// number of bytes left in packet
-        /// </summary>
-        internal int _inBytesPacket;
+        ///// <summary>
+        ///// number of bytes left in packet
+        ///// </summary>
+        //internal int _inBytesPacket;
 
         internal int _spid;                                 // SPID of the current connection
 
@@ -119,7 +120,7 @@ namespace Microsoft.Data.SqlClient
         internal volatile bool _fResetEventOwned;           // ResetEvent serializing call to sp_reset_connection
         internal volatile bool _fResetConnectionSent;       // For multiple packet execute
         internal bool _bulkCopyOpperationInProgress;        // Set to true during bulk copy and used to turn toggle write timeouts.
-        internal bool _bulkCopyWriteTimeout;                // Set to trun when _bulkCopyOperationInProgress is trun and write timeout happens
+        internal bool _bulkCopyWriteTimeout;                // Set to true when _bulkCopyOperationInProgress is trun and write timeout happens
 
         // SNI variables
         /// <summary>

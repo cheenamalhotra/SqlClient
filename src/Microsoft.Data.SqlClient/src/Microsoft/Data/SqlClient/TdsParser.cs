@@ -234,7 +234,6 @@ namespace Microsoft.Data.SqlClient
             {
                 ArrayPool<byte>.Shared.Return(rentedSSPIBuff, clearArray: true);
             }
-
             _physicalStateObj.WritePacket(TdsEnums.HARDFLUSH);
             _physicalStateObj.ResetSecurePasswordsInformation();     // Password information is needed only from Login process; done with writing login packet and should clear information
             _physicalStateObj.HasPendingData = true;

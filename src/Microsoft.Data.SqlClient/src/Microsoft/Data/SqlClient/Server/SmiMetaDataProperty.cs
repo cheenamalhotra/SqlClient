@@ -201,7 +201,7 @@ namespace Microsoft.Data.SqlClient.Server
                     delimit = true;
                 }
 
-                if (Microsoft.Data.SqlClient.SortOrder.Unspecified != columnOrd._order)
+                if (SortOrder.Unspecified != columnOrd._order)
                 {
                     returnValue += columnOrd.TraceString();
                 }

@@ -1897,61 +1897,12 @@ namespace Microsoft.Data.SqlClient
         {
             SqlConnectionString connectionOptions = (SqlConnectionString)ConnectionOptions;
 
-            if (_cultureCheckState != CultureCheckState.Standard)
-            {
-                // .NET Core 2.0 and up supports a Globalization Invariant Mode to reduce the size of
-                // required libraries for applications which don't need globalization support. SqlClient
-                // requires those libraries for core functionality and will throw exceptions later if they
-                // are not present. Throwing on open with a meaningful message helps identify the issue.
-                if (_cultureCheckState == CultureCheckState.Unknown)
-                {
-                    // check if invariant state has been set by appcontext switch directly 
-                    if (AppContext.TryGetSwitch("System.Globalization.Invariant", out bool isEnabled) && isEnabled)
-                    {
-                        _cultureCheckState = CultureCheckState.Invariant;
-                    }
-                    else
-                    {
-                        // check if invariant state has been set through environment variables
-                        string envValue = Environment.GetEnvironmentVariable("DOTNET_SYSTEM_GLOBALIZATION_INVARIANT");
-                        if (string.Equals(envValue, bool.TrueString, StringComparison.OrdinalIgnoreCase) || string.Equals(envValue, "1", StringComparison.OrdinalIgnoreCase))
-                        {
-                            _cultureCheckState = CultureCheckState.Invariant;
-                        }
-                        else
-                        {
-                            // if it hasn't been manually set it could still apply if the os doesn't have
-                            //  icu libs installed or is a native binary with icu support trimmed away
-                            // netcore 3.1 to net5 do not throw in attempting to create en-us in inariant mode
-                            // net6 and greater will throw so catch and infer invariant mode from the exception
-                            try
-                            {
-                                _cultureCheckState = CultureInfo.GetCultureInfo("en-US").EnglishName.Contains("Invariant") ? CultureCheckState.Invariant : CultureCheckState.Standard;
-                            }
-                            catch (CultureNotFoundException)
-                            {
-                                _cultureCheckState = CultureCheckState.Invariant;
-                            }
-                        }
-                    }
-                }
-                if (_cultureCheckState == CultureCheckState.Invariant)
-                {
-                    throw SQL.GlobalizationInvariantModeNotSupported();
-                }
-            }
+            ValidateCulture();
 
+            ValidateAuthConnectionOptions(connectionOptions, _credential);
+
+            // Fail Fast during initial connection
             _applyTransientFaultHandling = (!overrides.HasFlag(SqlConnectionOverrides.OpenWithoutRetry) && connectionOptions != null && connectionOptions.ConnectRetryCount > 0);
-
-            if (connectionOptions != null &&
-                (connectionOptions.Authentication == SqlAuthenticationMethod.SqlPassword ||
-                    connectionOptions.Authentication == SqlAuthenticationMethod.ActiveDirectoryPassword ||
-                    connectionOptions.Authentication == SqlAuthenticationMethod.ActiveDirectoryServicePrincipal) &&
-                (!connectionOptions._hasUserIdKeyword || !connectionOptions._hasPasswordKeyword) &&
-                _credential == null)
-            {
-                throw SQL.CredentialsNotProvided(connectionOptions.Authentication);
-            }
 
             if (ForceNewConnection)
             {
@@ -1982,23 +1933,8 @@ namespace Microsoft.Data.SqlClient
                 GC.ReRegisterForFinalize(this);
             }
 
-            // The _statistics can change with StatisticsEnabled. Copying to a local variable before checking for a null value.
-            SqlStatistics statistics = _statistics;
-            if (StatisticsEnabled ||
-                (s_diagnosticListener.IsEnabled(SqlClientDiagnosticListenerExtensions.SqlAfterExecuteCommand) && statistics != null))
-            {
-                _statistics._openTimestamp = ADP.TimerCurrent();
-                tdsInnerConnection.Parser.Statistics = _statistics;
-            }
-            else
-            {
-                tdsInnerConnection.Parser.Statistics = null;
-                _statistics = null; // in case of previous Open/Close/reset_CollectStats sequence
-            }
-
             return true;
         }
-
 
         //
         // INTERNAL PROPERTIES
@@ -2051,6 +1987,66 @@ namespace Microsoft.Data.SqlClient
         //
         // INTERNAL METHODS
         //
+
+        private static void ValidateCulture()
+        {
+            if (_cultureCheckState != CultureCheckState.Standard)
+            {
+                // .NET Core 2.0 and up supports a Globalization Invariant Mode to reduce the size of
+                // required libraries for applications which don't need globalization support. SqlClient
+                // requires those libraries for core functionality and will throw exceptions later if they
+                // are not present. Throwing on open with a meaningful message helps identify the issue.
+                if (_cultureCheckState == CultureCheckState.Unknown)
+                {
+                    // check if invariant state has been set by appcontext switch directly 
+                    if (AppContext.TryGetSwitch("System.Globalization.Invariant", out bool isEnabled) && isEnabled)
+                    {
+                        _cultureCheckState = CultureCheckState.Invariant;
+                    }
+                    else
+                    {
+                        // check if invariant state has been set through environment variables
+                        string envValue = Environment.GetEnvironmentVariable("DOTNET_SYSTEM_GLOBALIZATION_INVARIANT");
+                        if (string.Equals(envValue, bool.TrueString, StringComparison.OrdinalIgnoreCase) || string.Equals(envValue, "1", StringComparison.OrdinalIgnoreCase))
+                        {
+                            _cultureCheckState = CultureCheckState.Invariant;
+                        }
+                        else
+                        {
+                            // if it hasn't been manually set it could still apply if the os doesn't have
+                            //  icu libs installed or is a native binary with icu support trimmed away
+                            // netcore 3.1 to net5 do not throw in attempting to create en-us in inariant mode
+                            // net6 and greater will throw so catch and infer invariant mode from the exception
+                            try
+                            {
+                                _cultureCheckState = CultureInfo.GetCultureInfo("en-US").EnglishName.Contains("Invariant") ? CultureCheckState.Invariant : CultureCheckState.Standard;
+                            }
+                            catch (CultureNotFoundException)
+                            {
+                                _cultureCheckState = CultureCheckState.Invariant;
+                            }
+                        }
+                    }
+                }
+                if (_cultureCheckState == CultureCheckState.Invariant)
+                {
+                    throw SQL.GlobalizationInvariantModeNotSupported();
+                }
+            }
+        }
+
+        private static void ValidateAuthConnectionOptions(SqlConnectionString connectionOptions, SqlCredential sqlCredential)
+        {
+            if (connectionOptions != null &&
+                (connectionOptions.Authentication == SqlAuthenticationMethod.SqlPassword ||
+                    connectionOptions.Authentication == SqlAuthenticationMethod.ActiveDirectoryPassword ||
+                    connectionOptions.Authentication == SqlAuthenticationMethod.ActiveDirectoryServicePrincipal) &&
+                (!connectionOptions._hasUserIdKeyword || !connectionOptions._hasPasswordKeyword) &&
+                sqlCredential == null)
+            {
+                throw SQL.CredentialsNotProvided(connectionOptions.Authentication);
+            }
+        }
 
         internal void ValidateConnectionForExecute(string method, SqlCommand command)
         {

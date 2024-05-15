@@ -56,5 +56,4 @@ namespace Microsoft.Data.SqlClient.SNI
             _semaphore.Release();
         }
     }
-
 }

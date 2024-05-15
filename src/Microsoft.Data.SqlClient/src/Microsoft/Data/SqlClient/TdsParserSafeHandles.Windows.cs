@@ -160,7 +160,7 @@ namespace Microsoft.Data.SqlClient
             int totalTimeout,
 #endif
             SqlConnectionIPAddressPreference ipPreference,
-            SQLDNSInfo cachedDNSInfo,
+            SqlDnsInfo cachedDNSInfo,
             string hostNameInCertificate)
             : base(IntPtr.Zero, true)
         {
@@ -195,7 +195,7 @@ namespace Microsoft.Data.SqlClient
         }
 
         // constructs SNI Handle for MARS session
-        internal SNIHandle(SNINativeMethodWrapper.ConsumerInfo myInfo, SNIHandle parent, SqlConnectionIPAddressPreference ipPreference, SQLDNSInfo cachedDNSInfo) : base(IntPtr.Zero, true)
+        internal SNIHandle(SNINativeMethodWrapper.ConsumerInfo myInfo, SNIHandle parent, SqlConnectionIPAddressPreference ipPreference, SqlDnsInfo cachedDNSInfo) : base(IntPtr.Zero, true)
         {
             try
             { }

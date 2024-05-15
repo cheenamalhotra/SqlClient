@@ -375,7 +375,7 @@ namespace Microsoft.Data.ProviderBase
             {
                 if (isAlive)
                 {
-                    throw ADP.InternalError(ADP.InternalErrorCode.UnpooledObjectHasOwner);      // new unpooled object has an owner
+                    throw ADP.InternalError(ADP.InternalErrorCode.UnpooledObjectHasOwner); // new unpooled object has an owner
                 }
             }
             else if (isAlive && connection != expectedOwner)

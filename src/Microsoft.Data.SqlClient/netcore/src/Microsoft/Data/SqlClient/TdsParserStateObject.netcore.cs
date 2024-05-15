@@ -192,14 +192,14 @@ namespace Microsoft.Data.SqlClient
             bool fParallel,
             SqlConnectionIPAddressPreference iPAddressPreference,
             string cachedFQDN,
-            ref SQLDNSInfo pendingDNSInfo,
+            ref SqlDnsInfo pendingDNSInfo,
             string serverSPN,
             bool isIntegratedSecurity = false,
             bool tlsFirst = false,
             string hostNameInCertificate = "",
             string serverCertificateFilename = "");
 
-        internal abstract void AssignPendingDNSInfo(string userProtocol, string DNSCacheKey, ref SQLDNSInfo pendingDNSInfo);
+        internal abstract void AssignPendingDNSInfo(string userProtocol, string DNSCacheKey, ref SqlDnsInfo pendingDNSInfo);
 
         internal abstract uint SniGetConnectionId(ref Guid clientConnectionId);
 

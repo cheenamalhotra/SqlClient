@@ -17,6 +17,8 @@ using Microsoft.Data.ProviderBase;
 
 namespace Microsoft.Data.SqlClient.SNI
 {
+    // 1:1 with SqlCommand
+    // In new design, SqlCommand 1:1 with Messenger
     internal sealed class TdsParserStateObjectManaged : TdsParserStateObject
     {
         private SNIMarsConnection? _marsConnection;
@@ -87,7 +89,7 @@ namespace Microsoft.Data.SqlClient.SNI
             bool parallel,
             SqlConnectionIPAddressPreference iPAddressPreference,
             string cachedFQDN,
-            ref SQLDNSInfo pendingDNSInfo,
+            ref SqlDnsInfo pendingDNSInfo,
             string serverSPN,
             bool isIntegratedSecurity,
             bool tlsFirst,
@@ -115,7 +117,7 @@ namespace Microsoft.Data.SqlClient.SNI
         }
 
         // The assignment will be happened right after we resolve DNS in managed SNI layer
-        internal override void AssignPendingDNSInfo(string userProtocol, string DNSCacheKey, ref SQLDNSInfo pendingDNSInfo)
+        internal override void AssignPendingDNSInfo(string userProtocol, string DNSCacheKey, ref SqlDnsInfo pendingDNSInfo)
         {
             // No-op
         }
@@ -303,7 +305,7 @@ namespace Microsoft.Data.SqlClient.SNI
             return result;
         }
 
-        // No- Op in managed SNI
+        // No - Op in managed SNI
         internal override PacketHandle AddPacketToPendingList(PacketHandle packet) => packet;
 
         internal override bool IsValidPacket(PacketHandle packet)

@@ -104,7 +104,7 @@ namespace Microsoft.Data.SqlClient
     internal sealed class SqlInternalConnectionTds : SqlInternalConnection, IDisposable
     {
         // https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/wiki/retry-after#simple-retry-for-errors-with-http-error-codes-500-600
-        internal const int MsalHttpRetryStatusCode = 429;
+        // internal const int MsalHttpRetryStatusCode = 429;
 
         // CONNECTION AND STATE VARIABLES
         private readonly SqlConnectionPoolGroupProviderInfo _poolGroupProviderInfo; // will only be null when called for ChangePassword, or creating SSE User Instance
@@ -199,7 +199,7 @@ namespace Microsoft.Data.SqlClient
             }
         }
 
-        internal SQLDNSInfo pendingSQLDNSObject = null;
+        internal SqlDnsInfo pendingSQLDNSObject = null;
 
         // TCE flags
         internal byte _tceVersionSupported;

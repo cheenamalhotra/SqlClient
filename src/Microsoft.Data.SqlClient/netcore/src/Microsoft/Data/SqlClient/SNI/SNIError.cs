@@ -11,9 +11,6 @@ namespace Microsoft.Data.SqlClient.SNI
     /// </summary>
     internal class SNIError
     {
-        // Error numbers from native SNI implementation
-        internal const uint CertificateValidationErrorCode = 2148074277;
-
         public readonly SNIProviders provider;
         public readonly string errorMessage;
         public readonly uint nativeError;

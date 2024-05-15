@@ -173,7 +173,7 @@ namespace Microsoft.Data.SqlClient.SNI
             bool isIntegratedSecurity,
             SqlConnectionIPAddressPreference ipPreference,
             string cachedFQDN,
-            ref SQLDNSInfo pendingDNSInfo,
+            ref SqlDnsInfo pendingDNSInfo,
             bool tlsFirst,
             string hostNameInCertificate,
             string serverCertificateFilename)
@@ -310,7 +310,7 @@ namespace Microsoft.Data.SqlClient.SNI
             bool parallel,
             SqlConnectionIPAddressPreference ipPreference,
             string cachedFQDN,
-            ref SQLDNSInfo pendingDNSInfo,
+            ref SqlDnsInfo pendingDNSInfo,
             bool tlsFirst,
             string hostNameInCertificate,
             string serverCertificateFilename)

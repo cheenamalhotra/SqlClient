@@ -4,6 +4,7 @@
 
 using System;
 using System.Data;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
@@ -38,7 +39,7 @@ namespace Microsoft.Data.SqlClient
         public const string SqlAfterRollbackTransaction = SqlClientPrefix + nameof(WriteTransactionRollbackAfter);
         public const string SqlErrorRollbackTransaction = SqlClientPrefix + nameof(WriteTransactionRollbackError);
 
-        public static Guid WriteCommandBefore(this SqlDiagnosticListener @this, SqlCommand sqlCommand, SqlTransaction transaction, [CallerMemberName] string operation = "")
+        public static Guid WriteCommandBefore(this SqlDiagnosticListener @this, DbCommand sqlCommand, SqlTransaction transaction, [CallerMemberName] string operation = "")
         {
             if (@this.IsEnabled(SqlBeforeExecuteCommand))
             {
@@ -50,7 +51,7 @@ namespace Microsoft.Data.SqlClient
                     {
                         OperationId = operationId,
                         Operation = operation,
-                        ConnectionId = sqlCommand.Connection?.ClientConnectionId,
+                        ConnectionId = (sqlCommand.Connection as SqlConnection)?.ClientConnectionId,
                         Command = sqlCommand,
                         transaction?.InternalTransaction?.TransactionId,
                         Timestamp = Stopwatch.GetTimestamp()
@@ -347,7 +348,7 @@ namespace Microsoft.Data.SqlClient
             }
         }
 
-        public static DiagnosticScope CreateCommandScope(this SqlDiagnosticListener @this, SqlCommand command, SqlTransaction transaction, [CallerMemberName] string operationName = "")
+        public static DiagnosticScope CreateCommandScope(this SqlDiagnosticListener @this, DbCommand command, SqlTransaction transaction, [CallerMemberName] string operationName = "")
         {
             return DiagnosticScope.CreateCommandScope(@this, command, transaction, operationName);
         }
@@ -422,7 +423,7 @@ namespace Microsoft.Data.SqlClient
             _exception = ex;
         }
 
-        public static DiagnosticScope CreateCommandScope(SqlDiagnosticListener diagnostics, SqlCommand command, SqlTransaction transaction, [CallerMemberName] string operationName = "")
+        public static DiagnosticScope CreateCommandScope(SqlDiagnosticListener diagnostics, DbCommand command, SqlTransaction transaction, [CallerMemberName] string operationName = "")
         {
             Guid operationId = diagnostics.WriteCommandBefore(command, transaction, operationName);
             return new DiagnosticScope(diagnostics, CommandOperation, operationId, operationName, command, transaction);

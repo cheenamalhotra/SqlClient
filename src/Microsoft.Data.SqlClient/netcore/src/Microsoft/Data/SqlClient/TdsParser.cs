@@ -39,6 +39,7 @@ namespace Microsoft.Data.SqlClient
 
     // The TdsParser Object controls reading/writing to the netlib, parsing the tds,
     // and surfacing objects to the user.
+    // 1:1 with SqlConnection
     internal sealed partial class TdsParser
     {
         internal struct ReliabilitySection
@@ -7616,6 +7617,7 @@ namespace Microsoft.Data.SqlClient
             }
         }
 
+        // Cheena: Move to common Utils
         internal int GetEncodingCharLength(string value, int numChars, int charOffset, Encoding encoding)
         {
             if (string.IsNullOrEmpty(value))

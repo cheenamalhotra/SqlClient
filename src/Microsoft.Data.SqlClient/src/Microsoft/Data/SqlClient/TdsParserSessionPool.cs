@@ -27,6 +27,7 @@ namespace Microsoft.Data.SqlClient
         private readonly TdsParser _parser;       // parser that owns us
         private readonly List<TdsParserStateObject> _cache;        // collection of all known sessions 
         private int _cachedCount;  // lock-free _cache.Count
+        // 1:1 with SqlCommand
         private TdsParserStateObject[] _freeStateObjects; // collection of all sessions available for reuse
         private int _freeStateObjectCount; // Number of available free sessions
 
