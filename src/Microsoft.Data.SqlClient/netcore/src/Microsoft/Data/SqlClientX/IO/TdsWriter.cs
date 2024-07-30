@@ -37,7 +37,7 @@ namespace Microsoft.Data.SqlClientX.IO
         /// <param name="ct">Cancellation token.</param>
         public ValueTask WriteShortAsync(short value, bool isAsync, CancellationToken ct)
         {
-            var buffer = GetBuffer(sizeof(short));
+            Memory<byte> buffer = GetBuffer(sizeof(short));
             BinaryPrimitives.WriteInt16LittleEndian(buffer.Span, value);
             return WriteBytesAsync(buffer, isAsync, ct);
         }
@@ -50,7 +50,7 @@ namespace Microsoft.Data.SqlClientX.IO
         /// <param name="ct">Cancellation token.</param>
         public ValueTask WriteIntAsync(int value, bool isAsync, CancellationToken ct)
         {
-            var buffer = GetBuffer(sizeof(int));
+            Memory<byte> buffer = GetBuffer(sizeof(int));
             BinaryPrimitives.WriteInt32LittleEndian(buffer.Span, value);
             return WriteBytesAsync(buffer, isAsync, ct);
         }
@@ -81,7 +81,7 @@ namespace Microsoft.Data.SqlClientX.IO
         /// <param name="ct">Cancellation token.</param>
         public ValueTask WriteLongAsync(long value, bool isAsync, CancellationToken ct)
         {
-            var buffer = GetBuffer(sizeof(long));
+            Memory<byte> buffer = GetBuffer(sizeof(long));
             BinaryPrimitives.WriteInt64LittleEndian(buffer.Span, value);
             return WriteBytesAsync(buffer, isAsync, ct);
         }
@@ -105,7 +105,7 @@ namespace Microsoft.Data.SqlClientX.IO
         {
             Debug.Assert(float.IsFinite(value), "Float value is out of range.");
 
-            var buffer = GetBuffer(sizeof(float));
+            Memory<byte> buffer = GetBuffer(sizeof(float));
             BinaryPrimitives.WriteInt64LittleEndian(buffer.Span, BitConverter.SingleToInt32Bits(value));
             return WriteBytesAsync(buffer, isAsync, ct);
         }
@@ -120,7 +120,7 @@ namespace Microsoft.Data.SqlClientX.IO
         {
             Debug.Assert(double.IsFinite(value), "Double value is out of range.");
 
-            var buffer = GetBuffer(sizeof(double));
+            Memory<byte> buffer = GetBuffer(sizeof(double));
             BinaryPrimitives.WriteInt64LittleEndian(buffer.Span, BitConverter.DoubleToInt64Bits(value));
             return WriteBytesAsync(buffer, isAsync, ct);
         }
@@ -138,12 +138,35 @@ namespace Microsoft.Data.SqlClientX.IO
             Debug.Assert(length >= 0, "Length should not be negative");
             Debug.Assert(length <= 8, "Length specified is longer than the size of a long");
 
-            var buffer = GetBuffer(sizeof(long));
+            Memory<byte> buffer = GetBuffer(sizeof(long));
             for (int i = 0; i < length; i++)
             {
                 buffer.Span[i] = (byte)((value >> (i * 8)) & 0xFF);
             }
             return WriteBytesAsync(buffer, isAsync, ct);
+        }
+
+        /// <summary>
+        /// Writes byte directly to TdsSteam associated with writer.
+        /// </summary>
+        /// <param name="data">Data in byte array.</param>
+        /// <param name="isAsync">Whether caller method is executing asynchronously.</param>
+        /// <param name="ct">Cancellation token.</param>
+        /// <returns></returns>
+        public ValueTask WriteByteAsync(byte data, bool isAsync, CancellationToken ct)
+        {
+            // Throw operation canceled exception before write.
+            ct.ThrowIfCancellationRequested();
+
+            if (isAsync)
+            {
+                return _tdsStream.WriteByteAsync(data, isAsync, ct);
+            }
+            else
+            {
+                _tdsStream.WriteByte(data);
+                return ValueTask.CompletedTask;
+            }
         }
 
         /// <summary>
@@ -153,18 +176,19 @@ namespace Microsoft.Data.SqlClientX.IO
         /// <param name="isAsync">Whether caller method is executing asynchronously.</param>
         /// <param name="ct">Cancellation token.</param>
         /// <returns></returns>
-        public async ValueTask WriteBytesAsync(Memory<byte> data, bool isAsync, CancellationToken ct)
+        public ValueTask WriteBytesAsync(Memory<byte> data, bool isAsync, CancellationToken ct)
         {
             // Throw operation canceled exception before write.
             ct.ThrowIfCancellationRequested();
 
             if (isAsync)
             {
-                await _tdsStream.WriteAsync(data, ct).ConfigureAwait(false);
+                return _tdsStream.WriteAsync(data, ct);
             }
             else
             {
                 _tdsStream.Write(data.Span);
+                return ValueTask.CompletedTask;
             }
         }
 

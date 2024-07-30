@@ -90,8 +90,8 @@ namespace Microsoft.Data.SqlClientX.IO
             => FlushPacketAsync(true, isAsync: false, CancellationToken.None).ConfigureAwait(false);
 
         /// <inheritdoc />
-        public override async Task FlushAsync(CancellationToken ct)
-            => await FlushPacketAsync(true, true, ct).ConfigureAwait(false);
+        public override Task FlushAsync(CancellationToken ct)
+            => FlushPacketAsync(true, true, ct);
 
         /// <inheritdoc />
         public void SetPacketSize(int bufferSize)

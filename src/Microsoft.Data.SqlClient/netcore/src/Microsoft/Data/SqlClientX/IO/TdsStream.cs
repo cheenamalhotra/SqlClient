@@ -28,7 +28,7 @@ namespace Microsoft.Data.SqlClientX.IO
 
         /// <inheritdoc />
         public override bool CanRead => _readStream != null && _readStream.CanRead;
-        
+
         /// <inheritdoc />
         public override bool CanSeek => _readStream != null && _readStream.CanSeek;
 
@@ -46,10 +46,13 @@ namespace Microsoft.Data.SqlClientX.IO
         /// </summary>
         public virtual bool IsCancellationSent { get; internal set; }
 
-        public TdsStreamPacketType? PacketHeaderType 
+        /// <summary>
+        /// Sets or gets the packet header type
+        /// </summary>
+        public TdsStreamPacketType? PacketHeaderType
         {
             get => _writeStream.PacketHeaderType;
-            set => _writeStream.PacketHeaderType = value; 
+            set => _writeStream.PacketHeaderType = value;
         }
 
         /// <inheritdoc />
@@ -113,20 +116,20 @@ namespace Microsoft.Data.SqlClientX.IO
         }
 
         /// <inheritdoc />
-        public override void Flush() => _writeStream.Flush();
-
-
-        /// <inheritdoc />
-        public override int Read(Span<byte> buffer) => _readStream.Read(buffer);
+        public override void Flush()
+            => _writeStream.Flush();
 
         /// <inheritdoc />
-        public override int Read(
-            byte[] buffer, 
-            int offset, 
-            int count) => _readStream.Read(buffer, offset, count);
+        public override int Read(Span<byte> buffer)
+            => _readStream.Read(buffer);
 
         /// <inheritdoc />
-        public override long Seek(long offset, SeekOrigin origin) => _readStream.Seek(offset, origin);
+        public override int Read(byte[] buffer, int offset, int count)
+            => _readStream.Read(buffer, offset, count);
+
+        /// <inheritdoc />
+        public override long Seek(long offset, SeekOrigin origin) 
+            => _readStream.Seek(offset, origin);
 
         /// <inheritdoc />
         public override void SetLength(long value)
@@ -136,30 +139,20 @@ namespace Microsoft.Data.SqlClientX.IO
 
         /// <inheritdoc />
         public override void Write(ReadOnlySpan<byte> buffer)
-        {
-            _writeStream.Write(buffer);
-        }
+            => _writeStream.Write(buffer);
 
         /// <inheritdoc />
         public override void Write(byte[] buffer, int offset, int count)
-        {
-            _writeStream.Write(buffer, offset, count);
-        }
+            => _writeStream.Write(buffer, offset, count);
 
         /// <inheritdoc />
-        public override async ValueTask WriteAsync(
-            ReadOnlyMemory<byte> buffer,
-            CancellationToken cancellationToken) 
-            => await _writeStream.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
+        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
+            => _writeStream.WriteAsync(buffer, cancellationToken);
 
 
         /// <inheritdoc />
-        public override async Task WriteAsync(
-            byte[] buffer,
-            int offset,
-            int count,
-            CancellationToken cancellationToken)
-         => await _writeStream.WriteAsync(buffer.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            => _writeStream.WriteAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
 
         /// <summary>
         /// Called explicitly by the consumers to flush the stream,
@@ -168,31 +161,39 @@ namespace Microsoft.Data.SqlClientX.IO
         /// </summary>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public override async Task FlushAsync(CancellationToken ct)
-            => await _writeStream.FlushAsync(ct).ConfigureAwait(false);
+        public override Task FlushAsync(CancellationToken ct)
+            => _writeStream.FlushAsync(ct);
 
         /// <inheritdoc />
-        public override ValueTask<int> ReadAsync(
-            Memory<byte> buffer,
-            CancellationToken cancellationToken) => _readStream.ReadAsync(buffer, cancellationToken);
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+            => _readStream.ReadAsync(buffer, cancellationToken);
 
         /// <inheritdoc />
         public virtual ValueTask<byte> ReadByteAsync(bool isAsync, CancellationToken cancellationToken)
             => _readStream.ReadByteAsync(isAsync, cancellationToken);
 
-        /// <inheritdoc />
-        public virtual ValueTask<byte> PeekByteAsync(bool isAsync,
-            CancellationToken ct) => _readStream.PeekByteAsync(isAsync, ct);
+        /// <summary>
+        /// An async mechanism to write a byte to the stream.
+        /// </summary>
+        /// <param name="value">The byte value to be written</param>
+        /// <param name="isAsync">Indicates if the operation is Async</param>
+        /// <param name="ct">Cancellation token to cancel the async operation.</param>
+        /// <returns></returns>
+        public ValueTask WriteByteAsync(byte value, bool isAsync, CancellationToken ct)
+            => _writeStream.WriteByteAsync(value, isAsync, ct);
 
         /// <inheritdoc />
-        public virtual ValueTask SkipReadBytesAsync(int skipCount,
-            bool isAsync, 
-            CancellationToken ct) => _readStream.SkipReadBytesAsync(skipCount, isAsync, ct);
+        public virtual ValueTask<byte> PeekByteAsync(bool isAsync, CancellationToken ct)
+            => _readStream.PeekByteAsync(isAsync, ct);
+
+        /// <inheritdoc />
+        public virtual ValueTask SkipReadBytesAsync(int skipCount, bool isAsync, CancellationToken ct)
+            => _readStream.SkipReadBytesAsync(skipCount, isAsync, ct);
 
         /// <summary>
         /// Needed to reset the stream.
         /// Useful in some cases for TDS implementation, where we 
-        /// dont want to consume all the data in the stream, but 
+        /// don't want to consume all the data in the stream, but 
         /// want to make it available for the next set of operations.
         /// </summary>
         /// <exception cref="NotImplementedException"></exception>
@@ -205,9 +206,7 @@ namespace Microsoft.Data.SqlClientX.IO
         /// Queues the TDS cancellation token for the stream.
         /// </summary>
         public virtual void QueueCancellation()
-        {
-            _writeStream.QueueCancellation();
-        }
+            => _writeStream.QueueCancellation();
 
         /// <inheritdoc />
         public override async ValueTask DisposeAsync()
@@ -220,7 +219,7 @@ namespace Microsoft.Data.SqlClientX.IO
         protected override void Dispose(bool disposing)
         {
             if (disposing)
-            { 
+            {
                 _writeStream?.Dispose();
                 _readStream?.Dispose();
                 _writeStream = null;
@@ -229,11 +228,6 @@ namespace Microsoft.Data.SqlClientX.IO
                 TdsReader = null;
             }
             base.Dispose(disposing);
-        }
-
-        public async ValueTask WriteByteAsync(byte value, bool isAsync, CancellationToken ct)
-        {
-            await _writeStream.WriteByteAsync(value, isAsync, ct).ConfigureAwait(false);
         }
     }
 }
