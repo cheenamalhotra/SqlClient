@@ -13,6 +13,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Data.SqlClient.SNI;
 using Microsoft.Data.SqlClientX.Handlers.Connection.Login;
 using Microsoft.Data.SqlClientX.IO;
+using Microsoft.Data.SqlClientX.Tds;
 
 namespace Microsoft.Data.SqlClientX.Handlers.Connection
 {    /// <summary>
@@ -25,6 +26,11 @@ namespace Microsoft.Data.SqlClientX.Handlers.Connection
         /// Stream used by readers.
         /// </summary>
         public Stream ConnectionStream { get; set; }
+
+        /// <summary>
+        /// Tds Parser instance for token parsing.
+        /// </summary>
+        public TdsParserX Parser { get; set; }
 
         /// <summary>
         /// A timer representing the timeout for the connection.
@@ -123,20 +129,21 @@ namespace Microsoft.Data.SqlClientX.Handlers.Connection
         {
             return new ConnectionHandlerContext
             {
-                ConnectionStream = this.ConnectionStream, 
-                ConnectionString = this.ConnectionString, 
-                DataSource = this.DataSource, 
-                ConnectionId = this.ConnectionId,
-                SslStream = this.SslStream, 
-                SslOverTdsStream = this.SslOverTdsStream, 
-                TdsStream = this.TdsStream, 
-                IsMarsCapable = this.IsMarsCapable,
-                IsFedAuthNegotiatedInPrelogin = this.IsFedAuthNegotiatedInPrelogin,
-                AccessTokenInBytes = this.AccessTokenInBytes,
-                ServerInfo = this.ServerInfo, 
-                ErrorCollection = this.ErrorCollection, 
-                AccessTokenCallback = this.AccessTokenCallback, // Assuming delegate cloning is not required
-                PasswordChangeRequest = this.PasswordChangeRequest,
+                ConnectionStream = ConnectionStream,
+                ConnectionString = ConnectionString,
+                DataSource = DataSource,
+                ConnectionId = ConnectionId,
+                SslStream = SslStream,
+                SslOverTdsStream = SslOverTdsStream,
+                TdsStream = TdsStream,
+                Parser = Parser,
+                IsMarsCapable = IsMarsCapable,
+                IsFedAuthNegotiatedInPrelogin = IsFedAuthNegotiatedInPrelogin,
+                AccessTokenInBytes = AccessTokenInBytes,
+                ServerInfo = ServerInfo,
+                ErrorCollection = ErrorCollection,
+                AccessTokenCallback = AccessTokenCallback, // Assuming delegate cloning is not required
+                PasswordChangeRequest = PasswordChangeRequest
             };
         }
 

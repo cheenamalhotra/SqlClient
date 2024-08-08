@@ -12,14 +12,14 @@ namespace Microsoft.Data.SqlClient
     {
         // bug fix - MDAC 48965 - missing source of exception
         private readonly string _source = TdsEnums.SQL_PROVIDER_NAME;
-        private readonly int _number;
+        private readonly long _number;
         private readonly byte _state;
         private readonly byte _errorClass;
         [System.Runtime.Serialization.OptionalField(VersionAdded = 2)]
         private readonly string _server;
         private readonly string _message;
         private readonly string _procedure;
-        private readonly int _lineNumber;
+        private readonly long _lineNumber;
         [System.Runtime.Serialization.OptionalField(VersionAdded = 4)]
         private readonly int _win32ErrorCode;
         [System.Runtime.Serialization.OptionalField(VersionAdded = 5)]
@@ -29,9 +29,15 @@ namespace Microsoft.Data.SqlClient
 
 
         // NOTE: do not combine the overloads below using an optional parameter
-        //  they must remain ditinct because external projects use private reflection
+        //  they must remain distinct because external projects use private reflection
         //  to find and invoke the functions, changing the signatures will break many
         //  things elsewhere
+
+        internal SqlError(long infoNumber, byte errorState, byte errorClass, string server, string errorMessage, string procedure, long lineNumber, uint win32ErrorCode, Exception exception = null)
+            : this(infoNumber, errorState, errorClass, server, errorMessage, procedure, lineNumber, exception, -1)
+        {
+            _win32ErrorCode = (int)win32ErrorCode;
+        }
 
         internal SqlError(int infoNumber, byte errorState, byte errorClass, string server, string errorMessage, string procedure, int lineNumber, uint win32ErrorCode, Exception exception = null)
             : this(infoNumber, errorState, errorClass, server, errorMessage, procedure, lineNumber, win32ErrorCode, exception, -1)
@@ -41,7 +47,6 @@ namespace Microsoft.Data.SqlClient
         internal SqlError(int infoNumber, byte errorState, byte errorClass, string server, string errorMessage, string procedure, int lineNumber, uint win32ErrorCode, Exception exception, int batchIndex)
             : this(infoNumber, errorState, errorClass, server, errorMessage, procedure, lineNumber, exception, batchIndex)
         {
-            _server = server;
             _win32ErrorCode = (int)win32ErrorCode;
         }
 
@@ -50,7 +55,7 @@ namespace Microsoft.Data.SqlClient
         {
         }
 
-        internal SqlError(int infoNumber, byte errorState, byte errorClass, string server, string errorMessage, string procedure, int lineNumber, Exception exception, int batchIndex)
+        internal SqlError(long infoNumber, byte errorState, byte errorClass, string server, string errorMessage, string procedure, long lineNumber, Exception exception, int batchIndex)
         {
             _number = infoNumber;
             _state = errorState;
@@ -83,7 +88,7 @@ namespace Microsoft.Data.SqlClient
         public string Source => _source;
 
         /// <include file='../../../../../../doc/snippets/Microsoft.Data.SqlClient/SqlError.xml' path='docs/members[@name="SqlError"]/Number/*' />
-        public int Number => _number;
+        public long Number => _number;
 
         /// <include file='../../../../../../doc/snippets/Microsoft.Data.SqlClient/SqlError.xml' path='docs/members[@name="SqlError"]/State/*' />
         public byte State => _state;
@@ -101,7 +106,7 @@ namespace Microsoft.Data.SqlClient
         public string Procedure => _procedure;
 
         /// <include file='../../../../../../doc/snippets/Microsoft.Data.SqlClient/SqlError.xml' path='docs/members[@name="SqlError"]/LineNumber/*' />
-        public int LineNumber => _lineNumber;
+        public long LineNumber => _lineNumber;
 
         internal int Win32ErrorCode  => _win32ErrorCode;
 

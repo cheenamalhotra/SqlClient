@@ -52,6 +52,7 @@ namespace Microsoft.Data.SqlClientX.Handlers.Connection
 
             // TODO: Complete the login by reading data. 
             // This requires parsing by reading token stream from TDS.
+            await context.Parser.RunAsync(RunBehavior.UntilDone, isAsync , ct).ConfigureAwait(false);
         }
 
         private async ValueTask SendLogin(LoginHandlerContext context, bool isAsync, CancellationToken ct)

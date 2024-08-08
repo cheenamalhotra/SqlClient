@@ -38,7 +38,7 @@ namespace Microsoft.Data.SqlClientX
 
         //TODO: Investigate if we can just use dataSource.ConnectionString. Do this when this class can resolve its own data source.
         private string _connectionString = string.Empty;
-
+        private int _closeCount = 0;
         private bool _fireInfoMessageEventOnUserErrors; // False by default
 
         private ConnectionState _connectionState = ConnectionState.Closed;
@@ -335,6 +335,47 @@ namespace Microsoft.Data.SqlClientX
             => throw new NotImplementedException();
 
         #region internal helpers
+
+        internal void OnError(SqlException exception, bool breakConnection, Action<Action>? wrapCloseInAction)
+        {
+            Debug.Assert(exception != null && exception.Errors.Count != 0, "SqlConnection: OnError called with null or empty exception!");
+
+            if (breakConnection && (ConnectionState.Open == State))
+            {
+                if (wrapCloseInAction != null)
+                {
+                    int capturedCloseCount = _closeCount;
+
+                    void closeAction()
+                    {
+                        if (capturedCloseCount == _closeCount)
+                        {
+                            // TODO SqlClientEventSource.Log.TryTraceEvent("SqlConnection.OnError | Info | Object Id {0}, Connection broken.", ObjectID);
+                            Close();
+                        }
+                    }
+
+                    wrapCloseInAction(closeAction);
+                }
+                else
+                {
+                    // TODO SqlClientEventSource.Log.TryTraceEvent("SqlConnection.OnError | Info | Object Id {0}, Connection broken.", ObjectID);
+                    Close();
+                }
+            }
+
+            if (exception.Class >= TdsEnums.MIN_ERROR_CLASS)
+            {
+                // It is an error, and should be thrown.  Class of TdsEnums.MIN_ERROR_CLASS or above is an error,
+                // below TdsEnums.MIN_ERROR_CLASS denotes an info message.
+                throw exception;
+            }
+            else
+            {
+                // If it is a class < TdsEnums.MIN_ERROR_CLASS, it is a warning collection - so pass to handler
+                OnInfoMessage(new SqlInfoMessageEventArgs(exception), out _);
+            }
+        }
 
         internal void OnInfoMessage(SqlInfoMessageEventArgs imevent, out bool notified)
         {

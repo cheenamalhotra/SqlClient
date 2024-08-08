@@ -5,11 +5,18 @@
 using System;
 using System.Collections;
 using System.ComponentModel;
-using System.Data.Common;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.Serialization;
 using System.Text;
+
+#if NET6_0_OR_GREATER
+using System.Data.Common;
+#endif
+
+#if NET8_0_OR_GREATER
+using Microsoft.Data.SqlClientX.Tds.State;
+#endif
 
 namespace Microsoft.Data.SqlClient
 {
@@ -166,7 +173,7 @@ namespace Microsoft.Data.SqlClient
 
 
         // NOTE: do not combine the overloads below using an optional parameter
-        //  they must remain ditinct because external projects use private reflection
+        //  they must remain distinct because external projects use private reflection
         //  to find and invoke the functions, changing the signatures will break many
         //  things elsewhere
 
@@ -200,6 +207,28 @@ namespace Microsoft.Data.SqlClient
             return exception;
         }
 
+#if NET8_0_OR_GREATER
+        internal static SqlException CreateException(SqlErrorCollection errorCollection, string serverVersion, TdsContext context, Exception innerException = null, SqlBatchCommand batchCommand = null)
+        {
+            Guid connectionId = (context == null) ? Guid.Empty : context.ClientConnectionId;
+            SqlException exception = CreateException(errorCollection, serverVersion, connectionId, innerException, batchCommand);
+
+            if (context != null)
+            {
+                if ((context.OriginalClientConnectionId != Guid.Empty) && (context.OriginalClientConnectionId != context.ClientConnectionId))
+                {
+                    exception.Data.Add(OriginalClientConnectionIdKey, context.OriginalClientConnectionId);
+                }
+
+                if (!string.IsNullOrEmpty(context.RoutingDestination))
+                {
+                    exception.Data.Add(RoutingDestinationKey, context.RoutingDestination);
+                }
+            }
+
+            return exception;
+        }
+#endif
         internal static SqlException CreateException(SqlErrorCollection errorCollection, string serverVersion, Guid conId, Exception innerException = null)
             => CreateException(errorCollection, serverVersion, conId, innerException, batchCommand: null);
 

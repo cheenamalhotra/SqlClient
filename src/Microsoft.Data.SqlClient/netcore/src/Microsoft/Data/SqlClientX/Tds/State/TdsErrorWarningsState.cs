@@ -102,5 +102,86 @@ namespace Microsoft.Data.SqlClientX.Tds.State
                 return count;
             }
         }
+
+
+        /// <summary>
+        /// Gets the full list of errors and warnings (including the pre-attention ones), then wipes all error and warning lists
+        /// </summary>
+        /// <param name="broken">If true, the connection should be broken</param>
+        /// <returns>An array containing all of the errors and warnings</returns>
+        public SqlErrorCollection GetFullErrorAndWarningCollection(out bool broken)
+        {
+            SqlErrorCollection allErrors = new SqlErrorCollection();
+            broken = false;
+
+            lock (_errorAndWarningsLock)
+            {
+                _hasErrorOrWarning = false;
+
+                // Merge all error lists, then reset them
+                AddErrorsToCollection(_errors, ref allErrors, ref broken);
+                AddErrorsToCollection(_warnings, ref allErrors, ref broken);
+                _errors = null;
+                _warnings = null;
+
+                // We also process the pre-attention error lists here since, if we are here and they are populated, then an error occurred while sending attention so we should show the errors now (otherwise they'd be lost)
+                AddErrorsToCollection(_preAttentionErrors, ref allErrors, ref broken);
+                AddErrorsToCollection(_preAttentionWarnings, ref allErrors, ref broken);
+                _preAttentionErrors = null;
+                _preAttentionWarnings = null;
+            }
+
+            return allErrors;
+        }
+
+        /// <summary>
+        /// Stores away current errors and warnings so that an attention can be processed
+        /// </summary>
+        public void StoreErrorAndWarningForAttention()
+        {
+            lock (_errorAndWarningsLock)
+            {
+                Debug.Assert(_preAttentionErrors == null && _preAttentionWarnings == null, "Can't store errors for attention because there are already errors stored");
+
+                _hasErrorOrWarning = false;
+
+                _preAttentionErrors = _errors;
+                _preAttentionWarnings = _warnings;
+
+                _errors = null;
+                _warnings = null;
+            }
+        }
+
+        /// <summary>
+        /// Restores errors and warnings that were stored in order to process an attention
+        /// </summary>
+        internal void RestoreErrorAndWarningAfterAttention()
+        {
+            lock (_errorAndWarningsLock)
+            {
+                Debug.Assert(_errors == null && _warnings == null, "Can't restore errors after attention because there are already other errors");
+
+                _hasErrorOrWarning = (((_preAttentionErrors != null) && (_preAttentionErrors.Count > 0)) || ((_preAttentionWarnings != null) && (_preAttentionWarnings.Count > 0)));
+
+                _errors = _preAttentionErrors;
+                _warnings = _preAttentionWarnings;
+
+                _preAttentionErrors = null;
+                _preAttentionWarnings = null;
+            }
+        }
+
+        private void AddErrorsToCollection(SqlErrorCollection inCollection, ref SqlErrorCollection collectionToAddTo, ref bool broken)
+        {
+            if (inCollection != null)
+            {
+                foreach (SqlError error in inCollection)
+                {
+                    collectionToAddTo.Add(error);
+                    broken |= (error.Class >= TdsEnums.FATAL_ERROR_CLASS);
+                }
+            }
+        }
     }
 }

@@ -8,6 +8,7 @@ using System;
 using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Data.SqlClient;
 using Microsoft.Data.SqlClientX.Handlers.Connection;
 
 #nullable enable
@@ -102,6 +103,24 @@ namespace Microsoft.Data.SqlClientX
             {
                 Thread.Sleep(200);
                 return ValueTask.CompletedTask;
+            }
+        }
+
+        // If wrapCloseInAction is defined, then the action it defines will be run with the connection close action passed in as a parameter
+        // The close action also supports being run asynchronously
+        // TODO support breakConnection if needed with Pool synchronization.
+        internal void OnError(SqlException exception, Action<Action>? wrapCloseInAction = null)
+        {
+            SqlConnectionX? connection = OwningConnection;
+            if (null != connection)
+            {
+                connection.OnError(exception, false, wrapCloseInAction);
+            }
+            else if (exception.Class >= TdsEnums.MIN_ERROR_CLASS)
+            {
+                // It is an error, and should be thrown.  Class of TdsEnums.MIN_ERROR_CLASS
+                // or above is an error, below TdsEnums.MIN_ERROR_CLASS denotes an info message.
+                throw exception;
             }
         }
 

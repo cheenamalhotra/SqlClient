@@ -976,7 +976,11 @@
     <Compile Include="Microsoft\Data\SqlClientX\Tds\State\TdsErrorWarningsState.cs" />
     <Compile Include="Microsoft\Data\SqlClientX\Tds\State\TdsTransactionState.cs" />
     <Compile Include="Microsoft\Data\SqlClientX\Tds\State\TdsSnapshotState.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Tds\TdsParserExtensions.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Tds\TdsParserX.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Tds\TdsReaderExtensions.cs" />
     <Compile Include="Microsoft\Data\SqlClientX\Tds\State\TdsTimeoutState.cs" />
+    <Compile Include="Microsoft\Data\SqlClientX\Tds\TdsUtils.cs" />
     <Compile Include="Microsoft\Data\SqlClientX\Tds\Tokens\DataClassification\DataClassificationToken.cs" />
     <Compile Include="Microsoft\Data\SqlClientX\Tds\Tokens\DataClassification\DataClassificationTokenParser.cs" />
     <Compile Include="Microsoft\Data\SqlClientX\Tds\Tokens\DoneInProc\DoneInProcToken.cs" />
