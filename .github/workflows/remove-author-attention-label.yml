@@ -8,7 +8,7 @@ jobs:
   remove-label:
     # Only run on PR comments with '/ready' from the PR author
     if: >-
-      github.repository == 'dotnet/SqlClient' &&
+      github.repository == 'cheenamalhotra/SqlClient' &&
       github.event.issue.pull_request != null &&
       github.event.comment.user.login == github.event.issue.user.login &&
       contains(github.event.comment.body, '/ready')

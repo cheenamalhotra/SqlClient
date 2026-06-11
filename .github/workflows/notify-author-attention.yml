@@ -8,7 +8,7 @@ jobs:
   notify-author:
     # Only run when 'Author attention needed' label is added to a PR
     if: >-
-      github.repository == 'dotnet/SqlClient' &&
+      github.repository == 'cheenamalhotra/SqlClient' &&
       github.event.label.name == 'Author attention needed'
     runs-on: ubuntu-latest
     permissions:
